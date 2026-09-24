@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Nirengi</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Nirengi</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.nirengi.app.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.nirengi.app</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<!-- Notification permission -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Kritik olaylar ve ekip güncellemeleri için bildirim izni gereklidir.</string>
+	<!-- Camera permission -->
+	<key>NSCameraUsageDescription</key>
+	<string>Olay fotoğrafı çekmek ve belge taramak için kamera erişimi gereklidir.</string>
+	<!-- Photo library permission -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Olay belgelerine fotoğraf eklemek için fotoğraf kitaplığı erişimi gereklidir.</string>
+	<!-- Photo library add permission -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Olay fotoğraflarını kaydetmek için fotoğraf kitaplığı erişimi gereklidir.</string>
+	<!-- Microphone permission -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sesli not dikte etmek için mikrofon erişimi gereklidir.</string>
+	<!-- Location permission -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Olay konumunu otomatik doldurmak için konum erişimi gereklidir.</string>
+	<!-- Face ID permission -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Hızlı ve güvenli giriş için Face ID kullanılabilir.</string>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<!-- Required for App Store — prevents status bar overlap -->
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+	<!-- App Transport Security — allow HTTPS connections -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+</dict>
+</plist>
