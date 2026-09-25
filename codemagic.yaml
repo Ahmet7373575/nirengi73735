@@ -1,6 +1,6 @@
 workflows:
   nirengi-ios-unsigned:
-    name: Flutter iOS - ESign IPA
+    name: Nirengi iOS - ESign IPA
     max_build_duration: 120
     instance_type: mac_mini_m2
 
@@ -22,22 +22,19 @@ workflows:
           set -e
           test -n "$SUPABASE_URL" || { echo "SUPABASE_URL is missing"; exit 1; }
           test -n "$SUPABASE_ANON_KEY" || { echo "SUPABASE_ANON_KEY is missing"; exit 1; }
-          echo "Required Supabase variables are available. Values are not printed."
 
       - name: Get Flutter packages
         script: |
-          set -e
           flutter pub get
 
       - name: Install CocoaPods dependencies
         script: |
           set -e
           cd ios
-          pod install
+          pod install --repo-update
 
       - name: Build unsigned iOS application
         script: |
-          set -e
           flutter build ios \
             --release \
             --no-codesign \
