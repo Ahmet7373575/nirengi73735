@@ -29,9 +29,9 @@ workflows:
 
       - name: Install CocoaPods dependencies
         script: |
+          set -e
           cd ios
-          pod install
-          cd ..
+          pod install --repo-update
 
       - name: Build unsigned iOS application
         script: |
