@@ -149,10 +149,19 @@ class _AuthScreenState extends State<AuthScreen>
     if (m.contains('user not found')) {
       return 'Kullanıcı bulunamadı.';
     }
+    if (m.contains('invalid api key') || m.contains('apikey')) {
+      return 'Supabase API anahtarı geçersiz. CodeMagic ortam değişkenlerini kontrol edin.';
+    }
+    if (m.contains('failed host lookup') ||
+        m.contains('connection refused') ||
+        m.contains('network is unreachable')) {
+      return 'Supabase sunucusuna ulaşılamıyor. SUPABASE_URL değerini kontrol edin.';
+    }
     if (m.contains('network') ||
         m.contains('connection') ||
-        m.contains('socket')) {
-      return 'İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.';
+        m.contains('socket') ||
+        m.contains('failed to fetch')) {
+      return 'Supabase bağlantısı kurulamadı. SUPABASE_URL ve SUPABASE_ANON_KEY değerlerini kontrol edin.';
     }
     if (m.contains('sicil numarasına kayıtlı') ||
         m.contains('sicil numarasına bağlı')) {
