@@ -55,3 +55,53 @@ workflows:
       - Nirengi-unsigned.ipa
       - build/ios/iphoneos/Runner.app
       - /tmp/xcodebuild_logs/*.log
+
+  nirengi-ios-unsigned-m4:
+    name: Nirengi iOS - ESign IPA (M4 fallback)
+    max_build_duration: 120
+    instance_type: mac_mini_m4
+
+    environment:
+      groups:
+        - nirengi_production
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $HOME/Library/Caches/CocoaPods
+
+    scripts:
+      - name: Validate required environment variables
+        script: |
+          set -e
+          test -n "$SUPABASE_URL" || { echo "SUPABASE_URL is missing"; exit 1; }
+          test -n "$SUPABASE_ANON_KEY" || { echo "SUPABASE_ANON_KEY is missing"; exit 1; }
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          set -e
+          cd ios
+          pod install --repo-update
+      - name: Build unsigned iOS application
+        script: |
+          flutter build ios --release --no-codesign \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+      - name: Package IPA for ESign
+        script: |
+          set -e
+          rm -rf Payload Nirengi-unsigned.ipa
+          mkdir -p Payload
+          test -d build/ios/iphoneos/Runner.app
+          cp -R build/ios/iphoneos/Runner.app Payload/Runner.app
+          /usr/bin/zip -qry Nirengi-unsigned.ipa Payload
+          test -s Nirengi-unsigned.ipa
+
+    artifacts:
+      - Nirengi-unsigned.ipa
+      - build/ios/iphoneos/Runner.app
+      - /tmp/xcodebuild_logs/*.log
