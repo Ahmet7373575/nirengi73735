@@ -1,11 +1,8 @@
 import '../../core/app_export.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
-import './widgets/category_filter_widget.dart';
 import './widgets/home_app_bar_widget.dart';
 import './widgets/home_stats_bar_widget.dart';
-import './widgets/live_activity_feed_widget.dart';
-import './widgets/recent_notes_section_widget.dart';
 import './widgets/tool_card_grid_widget.dart';
 
 /// Home Screen — Operational dashboard for field officers.
@@ -17,19 +14,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedCategoryIndex = 0;
-
-  final List<String> _categories = [
-    'Tümü',
-    'Asayiş',
-    'Trafik',
-    'Narkotik',
-    'Yangın',
-    'Kayıp',
-    'Aile İçi',
-    'Çocuk',
-  ];
-
   String get _officerName {
     try {
       final user = AuthService.instance.currentUser;
@@ -90,19 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            // ── Category filter chips ─────────────────────────────────────
-            SliverToBoxAdapter(
-              child: CategoryFilterWidget(
-                categories: _categories,
-                selectedIndex: _selectedCategoryIndex,
-                onSelected: (i) {
-                  if (mounted) setState(() => _selectedCategoryIndex = i);
-                },
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
             // ── Tool cards grid ───────────────────────────────────────────
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -111,7 +82,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   isTablet: isTablet,
                   onToolTap: (toolId) {
                     try {
-                      context.go(AppRoutes.informationNoteScreen);
+                      switch (toolId) {
+                        case 'case_folders':
+                          context.push(AppRoutes.caseFolderScreen);
+                          break;
+                        case 'assistant':
+                          context.go(AppRoutes.aiAssistantScreen);
+                          break;
+                        case 'profile':
+                          context.go(AppRoutes.profileScreen);
+                          break;
+                        default:
+                          context.go(AppRoutes.informationNoteScreen);
+                      }
                     } catch (e) {
                       debugPrint('Tool nav error: $e');
                     }
@@ -121,20 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-            // ── Recent notes section ──────────────────────────────────────
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(child: RecentNotesSectionWidget()),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-            // ── Live activity feed ────────────────────────────────────────
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(child: LiveActivityFeedWidget()),
-            ),
 
             // ── Bottom padding for nav bar ────────────────────────────────
             const SliverToBoxAdapter(child: SizedBox(height: 120)),

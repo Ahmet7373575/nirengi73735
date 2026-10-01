@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import '../../../core/app_export.dart';
 
-/// Tool data model — Map-first pattern.
 class ToolModel {
   final String id;
   final String title;
@@ -19,22 +18,11 @@ class ToolModel {
     required this.category,
     required this.noteCount,
   });
-
-  factory ToolModel.fromMap(Map<String, dynamic> map) {
-    return ToolModel(
-      id: map['id'] as String,
-      title: map['title'] as String,
-      iconName: map['iconName'] as String,
-      color: Color(map['colorHex'] as int),
-      category: map['category'] as String,
-      noteCount: map['noteCount'] as int,
-    );
-  }
 }
 
-/// 2-column (tablet: 3-column) grid of tool cards.
-/// Each card: half-width glassmorphism, icon top-left + arrow top-right + label bottom.
-class ToolCardGridWidget extends StatefulWidget {
+/// Core workflow only: the officer starts with a case, then prepares a
+/// document or asks the assistant. Special incident types belong inside a case.
+class ToolCardGridWidget extends StatelessWidget {
   final bool isTablet;
   final ValueChanged<String> onToolTap;
 
@@ -44,300 +32,113 @@ class ToolCardGridWidget extends StatefulWidget {
     required this.onToolTap,
   });
 
-  @override
-  State<ToolCardGridWidget> createState() => _ToolCardGridWidgetState();
-}
-
-class _ToolCardGridWidgetState extends State<ToolCardGridWidget> {
-  // TODO: Replace with [Riverpod/Bloc] for production
-  late List<ToolModel> _tools;
-
-  static final List<Map<String, dynamic>> _toolMaps = [
-    {
-      'id': 'aranan_sahis',
-      'title': 'Aranan Şahıs',
-      'iconName': 'person_search',
-      'colorHex': 0xFF3B82F6,
-      'category': 'Asayiş',
-      'noteCount': 12,
-    },
-    {
-      'id': 'kacan_arac',
-      'title': 'Kaçan Araç',
-      'iconName': 'directions_car',
-      'colorHex': 0xFFEF4444,
-      'category': 'Trafik',
-      'noteCount': 5,
-    },
-    {
-      'id': 'trafik_kazasi',
-      'title': 'Trafik Kazası',
-      'iconName': 'car_crash',
-      'colorHex': 0xFFF59E0B,
-      'category': 'Trafik',
-      'noteCount': 8,
-    },
-    {
-      'id': 'yoklama_kacagi',
-      'title': 'Yoklama Kaçağı',
-      'iconName': 'badge',
-      'colorHex': 0xFF8B5CF6,
-      'category': 'Asayiş',
-      'noteCount': 3,
-    },
-    {
-      'id': 'genel_bilgi',
-      'title': 'Genel Bilgi Notu',
-      'iconName': 'notes',
-      'colorHex': 0xFF06B6D4,
-      'category': 'Genel',
-      'noteCount': 24,
-    },
-    {
-      'id': 'asayis',
-      'title': 'Asayiş',
-      'iconName': 'local_police',
-      'colorHex': 0xFF3B82F6,
-      'category': 'Asayiş',
-      'noteCount': 17,
-    },
-    {
-      'id': 'narkotik',
-      'title': 'Narkotik',
-      'iconName': 'medical_services',
-      'colorHex': 0xFF8B5CF6,
-      'category': 'Narkotik',
-      'noteCount': 6,
-    },
-    {
-      'id': 'kayip_sahis',
-      'title': 'Kayıp Şahıs',
-      'iconName': 'person_outline',
-      'colorHex': 0xFFF59E0B,
-      'category': 'Kayıp',
-      'noteCount': 4,
-    },
-    {
-      'id': 'aile_ici',
-      'title': 'Aile İçi',
-      'iconName': 'family_restroom',
-      'colorHex': 0xFFEC4899,
-      'category': 'Aile İçi',
-      'noteCount': 9,
-    },
-    {
-      'id': 'yangin',
-      'title': 'Yangın',
-      'iconName': 'local_fire_department',
-      'colorHex': 0xFFEF4444,
-      'category': 'Yangın',
-      'noteCount': 2,
-    },
-    {
-      'id': 'cocuk',
-      'title': 'Çocuk',
-      'iconName': 'child_care',
-      'colorHex': 0xFF10B981,
-      'category': 'Çocuk',
-      'noteCount': 7,
-    },
-    {
-      'id': 'trafik',
-      'title': 'Trafik',
-      'iconName': 'directions_car',
-      'colorHex': 0xFF10B981,
-      'category': 'Trafik',
-      'noteCount': 11,
-    },
+  static const _tools = [
+    ToolModel(
+      id: 'case_folders',
+      title: 'Olay Dosyaları',
+      iconName: 'folder_special',
+      color: Color(0xFF3B82F6),
+      category: 'Dosya',
+      noteCount: 0,
+    ),
+    ToolModel(
+      id: 'document',
+      title: 'Tutanak / Bilgi Notu',
+      iconName: 'description',
+      color: Color(0xFF10B981),
+      category: 'Belge',
+      noteCount: 0,
+    ),
+    ToolModel(
+      id: 'assistant',
+      title: 'Çavuş’a Sor',
+      iconName: 'smart_toy',
+      color: Color(0xFF8B5CF6),
+      category: 'Yardımcı',
+      noteCount: 0,
+    ),
+    ToolModel(
+      id: 'profile',
+      title: 'Personel Profili',
+      iconName: 'person_outline',
+      color: Color(0xFFF59E0B),
+      category: 'Hesap',
+      noteCount: 0,
+    ),
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _tools = _toolMaps.map(ToolModel.fromMap).toList();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final cols = widget.isTablet ? 3 : 2;
-    final rows = (_tools.length / cols).ceil();
-
+    final columns = isTablet ? 4 : 2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Modüller',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              '${_tools.length} modül',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
+        Text('Ana işlemler', style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        )),
         const SizedBox(height: 12),
-
-        // Grid
-        for (int r = 0; r < rows; r++) ...[
-          Row(
-            children: [
-              for (int c = 0; c < cols; c++) ...[
-                if (r * cols + c < _tools.length)
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: c < cols - 1 ? 8 : 0,
-                        bottom: 8,
-                      ),
-                      child: _ToolCard(
-                        tool: _tools[r * cols + c],
-                        onTap: () => widget.onToolTap(_tools[r * cols + c].id),
-                      ),
-                    ),
-                  )
-                else
-                  Expanded(child: const SizedBox()),
-                if (c < cols - 1) const SizedBox(width: 0),
-              ],
-            ],
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _tools.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: isTablet ? 1.35 : 1.45,
           ),
-        ],
+          itemBuilder: (context, index) => _ToolCard(
+            tool: _tools[index],
+            onTap: () => onToolTap(_tools[index].id),
+          ),
+        ),
       ],
     );
   }
 }
 
-/// Individual tool card — glassmorphism, icon top-left + arrow top-right +
-/// label bottom-left. Anatomy locked.
-class _ToolCard extends StatefulWidget {
+class _ToolCard extends StatelessWidget {
   final ToolModel tool;
   final VoidCallback onTap;
-
   const _ToolCard({required this.tool, required this.onTap});
 
   @override
-  State<_ToolCard> createState() => _ToolCardState();
-}
-
-class _ToolCardState extends State<_ToolCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pressController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pressController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 120),
-      lowerBound: 0.0,
-      upperBound: 0.04,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.96,
-    ).animate(CurvedAnimation(parent: _pressController, curve: Curves.easeOut));
-  }
-
-  @override
-  void dispose() {
-    _pressController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTapDown: (_) => _pressController.forward(),
-      onTapUp: (_) {
-        _pressController.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _pressController.reverse(),
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) =>
-            Transform.scale(scale: _scaleAnimation.value, child: child),
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
-              height: 110,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: widget.tool.color.withAlpha(26),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: widget.tool.color.withAlpha(64),
-                  width: 1,
-                ),
+                color: tool.color.withAlpha(26),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: tool.color.withAlpha(64)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Top row: icon + arrow ──────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: widget.tool.color.withAlpha(51),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Center(
-                          child: CustomIconWidget(
-                            iconName: widget.tool.iconName,
-                            color: widget.tool.color,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                      CustomIconWidget(
-                        iconName: 'north_east',
-                        color: Colors.white.withAlpha(102),
-                        size: 14,
-                      ),
-                    ],
-                  ),
+                  Icon(_iconFor(tool.iconName), color: tool.color, size: 25),
                   const Spacer(),
-                  // ── Label ─────────────────────────────────────────
-                  Text(
-                    widget.tool.title,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${widget.tool.noteCount} not',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 10,
-                    ),
-                  ),
+                  Text(tool.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 3),
+                  Text(tool.category, style: const TextStyle(color: Colors.white60, fontSize: 11)),
                 ],
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
+
+  IconData _iconFor(String name) {
+    switch (name) {
+      case 'folder_special': return Icons.folder_special_outlined;
+      case 'description': return Icons.description_outlined;
+      case 'smart_toy': return Icons.smart_toy_outlined;
+      default: return Icons.person_outline;
+    }
   }
 }

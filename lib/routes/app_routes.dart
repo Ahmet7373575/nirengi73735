@@ -7,7 +7,10 @@ import '../presentation/auth_screen/auth_screen.dart';
 import '../presentation/profile_screen/profile_screen.dart';
 import '../presentation/rapid_incident_screen/rapid_incident_screen.dart';
 import '../presentation/notification_preferences_screen/notification_preferences_screen.dart';
+import '../presentation/case_folder_screen/case_folder_screen.dart';
+import '../presentation/case_detail_screen/case_detail_screen.dart';
 import '../services/auth_service.dart';
+import '../services/incident_service.dart';
 import '../widgets/app_scaffold.dart';
 
 /// Route path constants — one per screen, no aliasing.
@@ -23,6 +26,8 @@ class AppRoutes {
   static const String rapidIncidentScreen = '/rapid-incident-screen';
   static const String notificationPreferencesScreen =
       '/notification-preferences-screen';
+  static const String caseFolderScreen = '/case-folders';
+  static const String caseDetailScreen = '/case-detail';
 }
 
 /// Top-level GoRouter instance with auth redirect guard.
@@ -161,6 +166,19 @@ final GoRouter appRouter = GoRouter(
           );
         },
       ),
+    ),
+
+    GoRoute(
+      path: AppRoutes.caseFolderScreen,
+      builder: (context, state) => const CaseFolderScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.caseDetailScreen,
+      builder: (context, state) {
+        final incident = state.extra;
+        if (incident is! IncidentModel) return const CaseFolderScreen();
+        return CaseDetailScreen(incident: incident);
+      },
     ),
 
     // ── StatefulShellRoute — persistent bottom nav tabs ──────────────────

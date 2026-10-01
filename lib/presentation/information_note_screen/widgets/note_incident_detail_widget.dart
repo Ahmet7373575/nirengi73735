@@ -6,13 +6,10 @@ import '../../../core/app_export.dart';
 class NoteIncidentDetailWidget extends StatefulWidget {
   final TextEditingController subjectController;
   final TextEditingController descriptionController;
-  final VoidCallback onMicTap;
-
   const NoteIncidentDetailWidget({
     super.key,
     required this.subjectController,
     required this.descriptionController,
-    required this.onMicTap,
   });
 
   @override
@@ -97,44 +94,6 @@ class _NoteIncidentDetailWidgetState extends State<NoteIncidentDetailWidget>
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const Spacer(),
-                  // ── Mic button ──────────────────────────────────
-                  GestureDetector(
-                    onTap: widget.onMicTap,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.secondary.withAlpha(38),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: AppTheme.secondary.withAlpha(77),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CustomIconWidget(
-                            iconName: 'mic',
-                            color: AppTheme.secondary,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Sesli Dikta',
-                            style: TextStyle(
-                              color: AppTheme.secondary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],

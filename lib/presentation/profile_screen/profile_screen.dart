@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_export.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
+import '../../services/officer_profile_storage.dart';
 
 /// Profile Screen — shows authenticated officer details and app settings.
 class ProfileScreen extends StatefulWidget {
@@ -48,16 +49,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserProfile() async {
+    final local = await OfficerProfileStorage.instance.read();
     final user = AuthService.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      _fullName = local['name'] ?? '';
+      _badgeNumber = local['badge_number'] ?? '';
+      _team = local['team_name'] ?? '';
+      _rank = local['rank'] ?? '';
+      _shiftSchedule = local['shift_status'] ?? '';
+      return;
+    }
 
     final meta = user.userMetadata ?? {};
-    _fullName = (meta['full_name'] as String?)?.trim() ?? '';
+    _fullName = (meta['full_name'] as String?)?.trim() ?? local['name'] ?? '';
     _email = user.email ?? '';
-    _badgeNumber = (meta['badge_number'] as String?) ?? '';
-    _rank = (meta['rank'] as String?) ?? '';
-    _team = (meta['team'] as String?) ?? '';
-    _shiftSchedule = (meta['shift_schedule'] as String?) ?? '';
+    _badgeNumber = (meta['badge_number'] as String?) ?? local['badge_number'] ?? '';
+    _rank = (meta['rank'] as String?) ?? local['rank'] ?? '';
+    _team = (meta['team'] as String?) ?? local['team_name'] ?? '';
+    _shiftSchedule = (meta['shift_schedule'] as String?) ?? local['shift_status'] ?? '';
 
     try {
       final member = await AuthService.instance.fetchCurrentTeamMember();

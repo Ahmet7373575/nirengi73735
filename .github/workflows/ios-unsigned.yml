@@ -1,0 +1,54 @@
+name: Nirengi iOS unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter packages
+        run: flutter pub get
+
+      - name: CocoaPods dependencies
+        run: |
+          cd ios
+          pod install --repo-update
+
+      - name: Build unsigned iOS app
+        run: |
+          flutter build ios --release --no-codesign \
+            --dart-define=SUPABASE_URL="https://lfwqxxslfvxjfoobztst.supabase.co" \
+            --dart-define=SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxmd3F4eHNsZnZ4amZvb2J6dHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NjE4MzIsImV4cCI6MjEwNjAzNzgzMn0.YTO9XdYIGxCiZWpBJA-0iZ2DWh6f3j24l68_teHoYac"
+
+      - name: Package IPA
+        run: |
+          set -e
+          rm -rf Payload Nirengi-unsigned.ipa
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/Runner.app
+          zip -qry Nirengi-unsigned.ipa Payload
+          test -s Nirengi-unsigned.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nirengi-unsigned-IPA
+          path: Nirengi-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
