@@ -554,9 +554,6 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
                       isTablet: isTablet,
                       dutyLocationController: _dutyLocationController,
                       gpsController: _gpsController,
-                      onGpsTap: () {
-                        _gpsController.text = '41.0082° K, 28.9784° D';
-                      },
                     ),
                   ),
                 ),
@@ -570,7 +567,6 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
                     child: NoteIncidentDetailWidget(
                       subjectController: _subjectController,
                       descriptionController: _descriptionController,
-                      onMicTap: () {},
                     ),
                   ),
                 ),
