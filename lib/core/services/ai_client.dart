@@ -1,11 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
 final Dio _dio = Dio(
   BaseOptions(
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 90),
-    sendTimeout: const Duration(seconds: 30),
+    connectTimeout: Duration(seconds: 30),
+    receiveTimeout: Duration(seconds: 90),
+    sendTimeout: Duration(seconds: 30),
   ),
 );
 
@@ -13,37 +16,43 @@ Future<Map<String, dynamic>> callLambdaFunction(
   String endpoint,
   Map<String, dynamic> payload,
 ) async {
-  if (endpoint.isEmpty) {
-    throw Exception('AI servisi yapılandırılmamış.');
-  }
+  if (endpoint.isEmpty) throw Exception('AI servisi yapılandırılmamış.');
   try {
-    final response = await _dio.post<Map<String, dynamic>>(
+    final response = await _dio.post<dynamic>(
       endpoint,
       data: payload,
-      options: Options(headers: {'Content-Type': 'application/json'}),
+      options: Options(headers: {
+        'Content-Type': 'application/json',
+        if (_supabaseAnonKey.isNotEmpty) 'apikey': _supabaseAnonKey,
+        if (_supabaseAnonKey.isNotEmpty)
+          'Authorization': 'Bearer $_supabaseAnonKey',
+      }),
     );
-    return response.data ?? {};
+    final data = response.data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    throw Exception('AI servisinden geçersiz yanıt geldi.');
   } on DioException catch (error) {
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.sendTimeout ||
         error.type == DioExceptionType.receiveTimeout) {
-      throw Exception('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
+      throw Exception('AI isteği zaman aşımına uğradı.');
     }
     if (error.type == DioExceptionType.connectionError) {
-      throw Exception(
-        'İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.',
-      );
+      throw Exception('AI servisine bağlanılamadı. İnternet bağlantınızı kontrol edin.');
     }
-    if (error.response?.data != null && error.response?.data is Map) {
-      final data = error.response?.data as Map<String, dynamic>;
-      if (data['error'] != null) {
-        debugPrint(
-          'Lambda Function Error: ${data['error']}, details: ${data['details']}',
-        );
-        throw Exception(data['error']);
+    final raw = error.response?.data;
+    if (error.response?.statusCode == 429) {
+      throw Exception('Gemini ücretsiz günlük kullanım kotası doldu. Kota yenilendiğinde tekrar deneyin.');
+    }
+    if (raw is Map) {
+      final map = Map<String, dynamic>.from(raw);
+      final message = map['details'] ?? map['error'];
+      if (message != null) {
+        debugPrint('Supabase AI error: $message');
+        throw Exception('AI sağlayıcısı yanıt vermedi (${error.response?.statusCode ?? 500}).');
       }
     }
-    debugPrint('Lambda function error: $error');
-    rethrow;
+    debugPrint('Supabase AI request error: $error');
+    throw Exception('AI servisine bağlanılamadı. Lütfen tekrar deneyin.');
   }
 }

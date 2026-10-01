@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -49,19 +50,9 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
   final Map<String, TextEditingController> _templateControllers = {};
 
   final List<String> _templates = [
-    'Aranan Şahıs',
-    'Kaçan Araç',
-    'Şüpheli Araç',
-    'Trafik Kazası',
-    'Asayiş Olayı',
-    'Hırsızlık',
-    'Mala Zarar',
-    'Kayıp Çocuk',
-    'Kayıp Yaşlı',
-    'Gürültü',
-    'Yangın',
-    'İş Kazası',
-    'Genel Bilgi Notu',
+    'Tutanak',
+    'Bilgi Notu',
+    'Mevzuat / Değerlendirme',
   ];
 
   @override
@@ -110,18 +101,9 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
   }
 
   static const Map<String, List<String>> _templateFields = {
-    'Aranan Şahıs': ['Ad soyad', 'Kimlik / eşkâl bilgisi'],
-    'Kaçan Araç': ['Plaka', 'Marka / model / renk'],
-    'Şüpheli Araç': ['Plaka', 'Şüpheli araç bilgisi'],
-    'Trafik Kazası': ['Araçlar ve plakalar', 'Yaralı / hasar bilgisi'],
-    'Asayiş Olayı': ['Olay türü', 'Şüpheli / mağdur bilgisi'],
-    'Hırsızlık': ['Çalınan eşya', 'Tahmini zarar / delil bilgisi'],
-    'Mala Zarar': ['Zarar gören mal', 'Zararın niteliği ve tahmini bedeli'],
-    'Kayıp Çocuk': ['Ad soyad / yaş', 'Son görüldüğü yer ve kıyafet'],
-    'Kayıp Yaşlı': ['Ad soyad / yaş', 'Sağlık ve eşkâl bilgisi'],
-    'Gürültü': ['Şikâyet kaynağı', 'Uyarı / işlem bilgisi'],
-    'Yangın': ['Yangın yeri ve nedeni', 'Can / mal kaybı bilgisi'],
-    'İş Kazası': ['İş yeri / olay türü', 'Yaralanma ve tedavi bilgisi'],
+    'Tutanak': ['Hazır bulunanlar', 'Tespit edilen hususlar'],
+    'Bilgi Notu': ['Bilginin kaynağı', 'Değerlendirme'],
+    'Mevzuat / Değerlendirme': ['Olayın hukuki niteliği', 'Dayanak / değerlendirme'],
   };
 
   List<String> get _activeTemplateFields =>
@@ -304,55 +286,65 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
       };
       await NoteCacheService.instance.saveSubmittedNoteLocally(submittedNote);
 
-      // 2. Generate and persist a real PDF file on the device.
+      // 2. Generate a Turkish-character-safe, official-looking document.
       final safeFileName = _subjectController.text
           .replaceAll(RegExp(r'[^\w\s-]'), '')
           .replaceAll(' ', '_');
-      final pdf = pw.Document();
+      final regular = pw.Font.ttf(
+        (await rootBundle.load('assets/fonts/NotoSans-Regular.ttf')),
+      );
+      final bold = pw.Font.ttf(
+        (await rootBundle.load('assets/fonts/NotoSans-Bold.ttf')),
+      );
+      final documentType = _templates[_selectedTemplateIndex];
+      final isTutanak = documentType == 'Tutanak';
+      final pdf = pw.Document(theme: pw.ThemeData.withFont(base: regular, bold: bold));
+      final templateValues = _templateValues();
       pdf.addPage(
-        pw.Page(
-          build: (context) => pw.Padding(
-            padding: const pw.EdgeInsets.all(28),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+        pw.MultiPage(
+          margin: const pw.EdgeInsets.fromLTRB(54, 46, 54, 48),
+          header: (context) => pw.Column(children: [
+            pw.Text('T.C.', style: pw.TextStyle(font: bold, fontSize: 11)),
+            pw.Text('İÇİŞLERİ BAKANLIĞI', style: pw.TextStyle(font: bold, fontSize: 11)),
+            pw.Text('EMNİYET GENEL MÜDÜRLÜĞÜ', style: pw.TextStyle(font: bold, fontSize: 10)),
+            pw.SizedBox(height: 18),
+            pw.Center(child: pw.Text(isTutanak ? 'TUTANAK' : documentType.toUpperCase(), style: pw.TextStyle(font: bold, fontSize: 16))),
+            pw.SizedBox(height: 14),
+          ]),
+          footer: (context) => pw.Align(alignment: pw.Alignment.centerRight, child: pw.Text('Sayfa ${context.pageNumber} / ${context.pagesCount}', style: pw.TextStyle(font: regular, fontSize: 8))),
+          build: (context) => [
+            pw.Table(
+              border: pw.TableBorder.all(width: .5),
+              columnWidths: const {0: pw.FlexColumnWidth(1.2), 1: pw.FlexColumnWidth(3)},
               children: [
-                pw.Text(
-                  'NİRENGİ - BİLGİ NOTU',
-                  style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-                pw.SizedBox(height: 14),
-                pw.Text('Şablon: ${_templates[_selectedTemplateIndex]}'),
-                pw.Text(
-                  'Tarih / Saat: ${_dateController.text} ${_timeController.text}',
-                ),
-                pw.Text('Personel: ${_personnelController.text}'),
-                pw.Text('Sicil: ${_badgeController.text}'),
-                pw.Text('Ekip: ${_teamController.text}'),
-                pw.Text('Görev yeri: ${_dutyLocationController.text}'),
-                pw.Text('GPS: ${_gpsController.text}'),
-                pw.SizedBox(height: 12),
-                ..._templateValues().entries.map(
-                  (entry) => pw.Text('${entry.key}: ${entry.value}'),
-                ),
-                pw.SizedBox(height: 12),
-                pw.Text(
-                  'Konu: ${_subjectController.text}',
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 8),
-                pw.Text(_descriptionController.text),
+                _pdfRow('Tarih / Saat', '${_dateController.text} - ${_timeController.text}', regular, bold),
+                _pdfRow('Yer / Görev', _dutyLocationController.text, regular, bold),
+                _pdfRow('Konu', _subjectController.text, regular, bold),
+                _pdfRow('Hazırlayan', '${_personnelController.text} - Sicil: ${_badgeController.text}', regular, bold),
+                _pdfRow('Birim / Ekip', _teamController.text, regular, bold),
               ],
             ),
-          ),
+            pw.SizedBox(height: 18),
+            pw.Text(isTutanak ? 'OLAYIN TESPİTİ VE AÇIKLAMASI' : 'BİLGİ NOTU', style: pw.TextStyle(font: bold, fontSize: 11)),
+            pw.SizedBox(height: 8),
+            pw.Container(width: double.infinity, padding: const pw.EdgeInsets.all(12), decoration: pw.BoxDecoration(border: pw.Border.all(width: .5)), child: pw.Text(_descriptionController.text.trim(), style: pw.TextStyle(font: regular, fontSize: 10, lineSpacing: 4))),
+            if (templateValues.isNotEmpty) ...[
+              pw.SizedBox(height: 18),
+              pw.Text('EK BİLGİLER', style: pw.TextStyle(font: bold, fontSize: 11)),
+              pw.SizedBox(height: 6),
+              pw.Table(border: pw.TableBorder.all(width: .5), children: templateValues.entries.map((entry) => _pdfRow(entry.key, entry.value.toString(), regular, bold)).toList()),
+            ],
+            pw.SizedBox(height: 26),
+            pw.Text(isTutanak ? 'İşbu tutanak tarafımızca birlikte tanzim edilerek imza altına alınmıştır.' : 'Arz ederim.', style: pw.TextStyle(font: regular, fontSize: 10)),
+            pw.SizedBox(height: 42),
+            pw.Align(alignment: pw.Alignment.centerRight, child: pw.Column(children: [pw.Text(_personnelController.text, style: pw.TextStyle(font: bold, fontSize: 10)), pw.Text(_teamController.text, style: pw.TextStyle(font: regular, fontSize: 10)), pw.SizedBox(height: 28), pw.Text('İMZA', style: pw.TextStyle(font: bold, fontSize: 9))])),
+          ],
         ),
       );
       final Uint8List pdfBytes = await pdf.save();
       final directory = await getApplicationDocumentsDirectory();
       final fileName =
-          'bilgi_notu_${safeFileName.isEmpty ? 'kayit' : safeFileName}_${now.millisecondsSinceEpoch}.pdf';
+          '${isTutanak ? 'tutanak' : 'bilgi_notu'}_${safeFileName.isEmpty ? 'kayit' : safeFileName}_${now.millisecondsSinceEpoch}.pdf';
       final file = File('${directory.path}/$fileName');
       await file.writeAsBytes(pdfBytes, flush: true);
 
@@ -425,6 +417,19 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
     } finally {
       if (mounted) setState(() => _isGeneratingPdf = false);
     }
+  }
+
+  pw.TableRow _pdfRow(String label, String value, pw.Font regular, pw.Font bold) {
+    return pw.TableRow(children: [
+      pw.Padding(
+        padding: const pw.EdgeInsets.all(7),
+        child: pw.Text(label, style: pw.TextStyle(font: bold, fontSize: 9)),
+      ),
+      pw.Padding(
+        padding: const pw.EdgeInsets.all(7),
+        child: pw.Text(value.trim().isEmpty ? 'Belirtilmedi' : value, style: pw.TextStyle(font: regular, fontSize: 9)),
+      ),
+    ]);
   }
 
   Widget _buildTemplateFieldsSection(ThemeData theme) {

@@ -132,18 +132,18 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
   bool _hasDraft = false;
   String _currentDraft = '';
 
-  // ── Provider selection — OpenAI is the primary provider ───────────────
-  bool _useOpenAI = true;
+  // Gemini is the configured provider; OpenAI is not required for this build.
+  bool _useOpenAI = false;
 
   ChatConfig get _config => _useOpenAI
       ? const ChatConfig(
           provider: 'OPEN_AI',
-          model: 'gpt-5.6-terra',
+          model: 'gpt-4o-mini',
           streaming: true,
         )
       : const ChatConfig(
           provider: 'GEMINI',
-          model: 'gemini/gemini-3.7-flash',
+          model: 'gemini-3.8-flash',
           streaming: true,
         );
 
@@ -169,7 +169,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
           _ChatMessage(
             role: 'assistant',
             content:
-                'Merhaba! Ben Nirengi Yapay Zeka Asistanı (OpenAI GPT ile güçlendirilmiştir).\n\n'
+                'Merhaba! Ben Nirengi Yapay Zeka Asistanı (Gemini ile güçlendirilmiştir).\n\n'
                 'Size şu konularda yardımcı olabilirim:\n'
                 '📝 **Not Yazımı** — Olayı anlatın, resmi belge taslağı oluşturayım\n'
                 '📋 **Olay Şablonları** — Tutanak, bilgi notu ve rapor şablonları\n'
@@ -231,7 +231,11 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
           apiMessages,
           parameters: _useOpenAI
               ? {'max_completion_tokens': 2000}
-              : {'temperature': 0.7, 'max_tokens': 2000},
+              : {
+                  'temperature': 0.7,
+                  'maxOutputTokens': 1200,
+                  'thinkingConfig': {'thinkingBudget': 0},
+                },
         );
 
     _scrollToBottom();
