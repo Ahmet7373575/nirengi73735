@@ -11,8 +11,9 @@ final Dio _dio = Dio(
 
 Future<Map<String, dynamic>> callLambdaFunction(
   String endpoint,
-  Map<String, dynamic> payload,
-) async {
+  Map<String, dynamic> payload, {
+  Map<String, String> headers = const {'Content-Type': 'application/json'},
+}) async {
   if (endpoint.isEmpty) {
     throw Exception('AI servisi yapılandırılmamış.');
   }
@@ -20,7 +21,7 @@ Future<Map<String, dynamic>> callLambdaFunction(
     final response = await _dio.post<Map<String, dynamic>>(
       endpoint,
       data: payload,
-      options: Options(headers: {'Content-Type': 'application/json'}),
+      options: Options(headers: headers),
     );
     return response.data ?? {};
   } on DioException catch (error) {
@@ -38,12 +39,12 @@ Future<Map<String, dynamic>> callLambdaFunction(
       final data = error.response?.data as Map<String, dynamic>;
       if (data['error'] != null) {
         debugPrint(
-          'Lambda Function Error: ${data['error']}, details: ${data['details']}',
+          'Supabase Function Error: ${data['error']}, details: ${data['details']}',
         );
         throw Exception(data['error']);
       }
     }
-    debugPrint('Lambda function error: $error');
+    debugPrint('Supabase function error: $error');
     rethrow;
   }
 }

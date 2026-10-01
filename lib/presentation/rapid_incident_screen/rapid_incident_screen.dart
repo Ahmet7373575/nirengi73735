@@ -77,7 +77,7 @@ class _RapidIncidentScreenState extends ConsumerState<RapidIncidentScreen>
 
   static const _aiConfig = ChatConfig(
     provider: 'GEMINI',
-    model: 'gemini/gemini-3.7-flash',
+    model: 'gemini-3.8-flash',
     streaming: false,
   );
 

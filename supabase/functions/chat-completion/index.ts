@@ -133,7 +133,11 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const upstream = await geminiRequest(body, apiKey);
+    let upstream = await geminiRequest(body, apiKey);
+    for (let attempt = 1; attempt <= 2 && upstream.status === 503; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 800));
+      upstream = await geminiRequest(body, apiKey);
+    }
     if (!upstream.ok) {
       const details = await upstream.text();
       return json({ error: `GEMINI API error: ${upstream.status}`, details }, upstream.status);

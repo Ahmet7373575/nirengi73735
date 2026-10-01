@@ -3,11 +3,27 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../ai_client.dart';
 
+const String _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const String _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 const String _chatCompletionEndpoint = String.fromEnvironment(
-  'AWS_LAMBDA_CHAT_COMPLETION_URL',
+  'AI_CHAT_COMPLETION_URL',
 );
 
-/// Timeout durations for AI requests
+String get _resolvedChatCompletionEndpoint =>
+    _chatCompletionEndpoint.isNotEmpty
+        ? _chatCompletionEndpoint
+        : (_supabaseUrl.isNotEmpty
+              ? '$_supabaseUrl/functions/v1/chat-completion'
+              : '');
+
+Map<String, String> get _supabaseFunctionHeaders => {
+  'Content-Type': 'application/json',
+  if (_supabaseAnonKey.isNotEmpty) ...{
+    'apikey': _supabaseAnonKey,
+    'Authorization': 'Bearer $_supabaseAnonKey',
+  },
+};
+
 const Duration _connectTimeout = Duration(seconds: 30);
 const Duration _receiveTimeout = Duration(seconds: 90);
 
@@ -17,7 +33,8 @@ Future<Map<String, dynamic>> getChatCompletion(
   List<Map<String, dynamic>> messages, {
   Map<String, dynamic> parameters = const {},
 }) async {
-  if (_chatCompletionEndpoint.isEmpty) {
+  final endpoint = _resolvedChatCompletionEndpoint;
+  if (endpoint.isEmpty) {
     throw Exception('AI servisi yapılandırılmamış.');
   }
   final payload = {
@@ -27,7 +44,11 @@ Future<Map<String, dynamic>> getChatCompletion(
     'stream': false,
     'parameters': parameters,
   };
-  return await callLambdaFunction(_chatCompletionEndpoint, payload);
+  return await callLambdaFunction(
+    endpoint,
+    payload,
+    headers: _supabaseFunctionHeaders,
+  );
 }
 
 Future<void> getStreamingChatCompletion(
@@ -39,7 +60,8 @@ Future<void> getStreamingChatCompletion(
   required void Function(Exception error) onError,
   Map<String, dynamic> parameters = const {},
 }) async {
-  if (_chatCompletionEndpoint.isEmpty) {
+  final endpoint = _resolvedChatCompletionEndpoint;
+  if (endpoint.isEmpty) {
     onError(Exception('AI servisi yapılandırılmamış.'));
     return;
   }
@@ -62,10 +84,10 @@ Future<void> getStreamingChatCompletion(
     );
 
     final response = await dio.post<ResponseBody>(
-      _chatCompletionEndpoint,
+      endpoint,
       data: payload,
       options: Options(
-        headers: {'Content-Type': 'application/json'},
+        headers: _supabaseFunctionHeaders,
         responseType: ResponseType.stream,
       ),
     );
@@ -89,35 +111,32 @@ Future<void> getStreamingChatCompletion(
               onComplete();
             } else if (data['type'] == 'error') {
               debugPrint(
-                'Lambda Function Error: ${data['error']}, details: ${data['details']}',
+                'Supabase Function Error: ${data['error']}, details: ${data['details']}',
               );
               onError(Exception(data['error']));
             }
           } catch (_) {
-            // Ignore malformed SSE lines
+            // Ignore malformed SSE lines.
           }
         }
       }
     }
 
-    // Ensure onComplete is called even if 'done' event was missed
-    if (!completed) {
-      onComplete();
-    }
+    if (!completed) onComplete();
   } on DioException catch (e) {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.sendTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
       onError(Exception('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.'));
     } else if (e.type == DioExceptionType.connectionError) {
-      onError(
-        Exception('İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.'),
-      );
+      onError(Exception('İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.'));
+    } else if (e.response?.data is Map && e.response?.data['error'] != null) {
+      onError(Exception(e.response?.data['error'].toString()));
     } else {
-      onError(Exception('Bağlantı hatası oluştu. Lütfen tekrar deneyin.'));
+      onError(Exception('AI servisine bağlanılamadı. Lütfen tekrar deneyin.'));
     }
   } catch (error) {
-    debugPrint('Streaming error: $error');
+    debugPrint('Supabase streaming error: $error');
     onError(error is Exception ? error : Exception(error.toString()));
   }
 }
