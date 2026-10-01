@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/prompts/official_police_prompts.dart';
 import '../../providers/chat_notifier.dart';
 import '../../widgets/custom_icon_widget.dart';
 
@@ -57,34 +58,31 @@ class _ChatMessage {
 
 // ─── System prompt builder ─────────────────────────────────────────────────
 String _buildSystemPrompt(DraftType draftType) {
-  const base =
-      '''Sen Nirengi uygulamasının yapay zeka asistanısın. Türk emniyet personeline yardım ediyorsun.
-Görevin üç ana alanda destek sağlamak:
-
-1. NOT YAZIMI (Note Composition): Kullanıcının anlattığı olayı dinle, eksik bilgileri sormak için takip soruları sor, ardından resmi formatta belge taslağı oluştur.
-2. OLAY ŞABLONLARI (Incident Templates): Hızlı olay raporları, tutanaklar ve bilgi notları için hazır şablonlar sun. Kullanıcının olay türüne göre en uygun şablonu öner ve doldur.
-3. EKİP SORULARI (Team Questions): Ekip koordinasyonu, görev ataması, vardiya planlaması ve personel yönetimi konularında rehberlik et.
-
-Kurallar:
-- Türkçe konuş, resmi ama anlaşılır bir dil kullan.
-- Kullanıcı adına resmi karar verme; yalnızca kullanıcının verdiği bilgilerden düzenlenebilir taslak oluştur.
-- Eksik kritik bilgiler varsa (yer, saat, şüpheli tanımı vb.) sormadan taslak oluşturma.
-- Her soru kısa ve net olsun; aynı anda en fazla 3 soru sor.
-- Taslak oluştururken başlık, tarih/saat alanı, içerik ve imza bölümü içeren resmi format kullan.
-- Olay şablonu istendiğinde önce olay türünü sor, ardından uygun şablonu sun.
-- Ekip soruları için pratik, uygulanabilir öneriler ver.''';
-
   switch (draftType) {
     case DraftType.bilgiNotu:
-      return '$base\n\nŞu an BİLGİ NOTU taslağı oluşturuyorsun. Format: T.C. başlığı, birim adı, tarih/saat, konu, açıklama paragrafları, hazırlayan personel bilgisi.';
+      return OfficialPolicePrompts.assistant(
+        mode: OfficialPolicePrompts.bilgiNotu,
+      );
     case DraftType.tutanak:
-      return '$base\n\nŞu an TUTANAK taslağı oluşturuyorsun. Format: Tutanak başlığı, tarih/yer/saat, hazır bulunanlar, olay tespiti, imza alanları.';
+      return OfficialPolicePrompts.assistant(
+        mode: OfficialPolicePrompts.tutanak,
+      );
     case DraftType.dilekce:
-      return '$base\n\nŞu an DİLEKÇE taslağı oluşturuyorsun. Format: Makam adresi, konu satırı, saygı ifadesi, talep paragrafı, tarih ve imza.';
+      return OfficialPolicePrompts.assistant(
+        mode: '''Şu an DİLEKÇE taslağı oluşturuyorsun. Makam adresi, konu,
+saygı ifadesi, talep paragrafı, tarih ve imza alanlarını kullan.''',
+      );
     case DraftType.rapor:
-      return '$base\n\nŞu an RAPOR taslağı oluşturuyorsun. Format: Rapor başlığı, dönem, özet, detaylar, sonuç ve öneriler, hazırlayan.';
+      return OfficialPolicePrompts.assistant(
+        mode: '''Şu an RAPOR taslağı oluşturuyorsun. Rapor başlığı, dönem,
+özet, detaylar, sonuç ve öneriler ile hazırlayan bilgilerini kullan.''',
+      );
     case DraftType.none:
-      return '$base\n\nSerbest konuşma modundasın. Kullanıcının not yazımı, olay şablonları veya ekip soruları konularındaki taleplerini karşıla. Gerektiğinde belge taslağı oluşturmayı teklif et.';
+      return OfficialPolicePrompts.assistant(
+        mode: '''Serbest konuşma modundasın. Kullanıcının not yazımı, olay
+şablonları, mevzuat soruları veya ekip sorularını karşıla. Tutanak, bilgi notu
+veya mevzuat analizi gerektiğinde uygun resmi modülü kullan.''',
+      );
   }
 }
 
@@ -132,20 +130,12 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
   bool _hasDraft = false;
   String _currentDraft = '';
 
-  // ── Provider selection — OpenAI is the primary provider ───────────────
-  bool _useOpenAI = true;
-
-  ChatConfig get _config => _useOpenAI
-      ? const ChatConfig(
-          provider: 'OPEN_AI',
-          model: 'gpt-5.6-terra',
-          streaming: true,
-        )
-      : const ChatConfig(
-          provider: 'GEMINI',
-          model: 'gemini/gemini-3.7-flash',
-          streaming: true,
-        );
+  // ── Tek sağlayıcı: Google Gemini ─────────────────────────────────────
+  static const ChatConfig _config = ChatConfig(
+    provider: 'GEMINI',
+    model: 'gemini-3.8-flash',
+    streaming: true,
+  );
 
   late AnimationController _typingController;
   late Animation<double> _typingAnimation;
@@ -169,7 +159,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
           _ChatMessage(
             role: 'assistant',
             content:
-                'Merhaba! Ben Nirengi Yapay Zeka Asistanı (OpenAI GPT ile güçlendirilmiştir).\n\n'
+                'Merhaba! Ben Nirengi Yapay Zeka Asistanı (Google Gemini ile güçlendirilmiştir).\n\n'
                 'Size şu konularda yardımcı olabilirim:\n'
                 '📝 **Not Yazımı** — Olayı anlatın, resmi belge taslağı oluşturayım\n'
                 '📋 **Olay Şablonları** — Tutanak, bilgi notu ve rapor şablonları\n'
@@ -229,9 +219,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
         .read(chatNotifierProvider(currentConfig).notifier)
         .sendMessage(
           apiMessages,
-          parameters: _useOpenAI
-              ? {'max_completion_tokens': 2000}
-              : {'temperature': 0.7, 'max_tokens': 2000},
+          parameters: {'temperature': 0.7, 'maxOutputTokens': 2000},
         );
 
     _scrollToBottom();
@@ -483,62 +471,6 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
               ],
             ),
           ),
-          // ── Provider toggle ──────────────────────────────────────────
-          GestureDetector(
-            onTap: chatState.isLoading
-                ? null
-                : () {
-                    setState(() {
-                      _useOpenAI = !_useOpenAI;
-                    });
-                    Fluttertoast.showToast(
-                      msg: _useOpenAI ? 'OpenAI (GPT) aktif' : 'Gemini aktif',
-                      backgroundColor: const Color(0xFF3B82F6),
-                      textColor: Colors.white,
-                      toastLength: Toast.LENGTH_SHORT,
-                    );
-                  },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: _useOpenAI
-                    ? const Color(0xFF10A37F).withAlpha(30)
-                    : const Color(0xFF4285F4).withAlpha(30),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: _useOpenAI
-                      ? const Color(0xFF10A37F).withAlpha(100)
-                      : const Color(0xFF4285F4).withAlpha(100),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _useOpenAI ? Icons.auto_awesome : Icons.hub_rounded,
-                    color: _useOpenAI
-                        ? const Color(0xFF10A37F)
-                        : const Color(0xFF4285F4),
-                    size: 13,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _useOpenAI ? 'GPT' : 'Gemini',
-                    style: GoogleFonts.ibmPlexSans(
-                      color: _useOpenAI
-                          ? const Color(0xFF10A37F)
-                          : const Color(0xFF4285F4),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
           // Draft type toggle
           GestureDetector(
             onTap: () => setState(

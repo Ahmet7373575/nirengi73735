@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/prompts/official_police_prompts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import '../../core/app_export.dart';
@@ -183,7 +184,10 @@ class _RapidIncidentScreenState extends ConsumerState<RapidIncidentScreen>
     final title = _titleController.text.trim();
     final prompt =
         '''
-Sen bir polis olay analiz asistanısın. Aşağıdaki olay açıklamasını analiz et ve JSON formatında yanıt ver.
+Sen Nirengi'nin polis olay ön değerlendirme asistanısın. Aşağıdaki olay
+açıklamasını analiz et ve yalnızca geçerli JSON formatında yanıt ver.
+
+${OfficialPolicePrompts.safety}
 
 Olay Başlığı: ${title.isNotEmpty ? title : '(belirtilmedi)'}
 Olay Açıklaması: $description
@@ -215,7 +219,7 @@ Sadece JSON döndür, başka açıklama ekleme.
             },
             {'role': 'user', 'content': prompt},
           ],
-          parameters: {'temperature': 0.2, 'max_tokens': 300},
+          parameters: {'temperature': 0.2, 'maxOutputTokens': 300},
         );
   }
 
