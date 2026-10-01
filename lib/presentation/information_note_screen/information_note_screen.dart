@@ -12,8 +12,8 @@ import '../../services/auth_service.dart';
 import '../../services/note_cache_service.dart';
 import '../../services/note_merge_service.dart';
 import '../../services/note_storage_service.dart';
+import '../../services/officer_profile_storage.dart';
 import './widgets/note_action_bar_widget.dart';
-import './widgets/note_attachments_widget.dart';
 import './widgets/note_basic_info_widget.dart';
 import './widgets/note_incident_detail_widget.dart';
 import './widgets/note_merge_dialog_widget.dart';
@@ -49,19 +49,9 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
   final Map<String, TextEditingController> _templateControllers = {};
 
   final List<String> _templates = [
-    'Aranan Şahıs',
-    'Kaçan Araç',
-    'Şüpheli Araç',
-    'Trafik Kazası',
-    'Asayiş Olayı',
-    'Hırsızlık',
-    'Mala Zarar',
-    'Kayıp Çocuk',
-    'Kayıp Yaşlı',
-    'Gürültü',
-    'Yangın',
-    'İş Kazası',
-    'Genel Bilgi Notu',
+    'Tutanak',
+    'Bilgi Notu',
+    'Mevzuat Ön Değerlendirme',
   ];
 
   @override
@@ -80,12 +70,13 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
 
   Future<void> _loadOfficerDefaults() async {
     try {
+      final local = await OfficerProfileStorage.instance.read();
       final member = await AuthService.instance.fetchCurrentTeamMember();
-      if (!mounted || member == null) return;
+      if (!mounted) return;
       setState(() {
-        _personnelController.text = member['name']?.toString() ?? '';
-        _badgeController.text = member['badge_number']?.toString() ?? '';
-        _teamController.text = member['team_name']?.toString() ?? '';
+        _personnelController.text = member?['name']?.toString() ?? local['name'] ?? '';
+        _badgeController.text = member?['badge_number']?.toString() ?? local['badge_number'] ?? '';
+        _teamController.text = member?['team_name']?.toString() ?? local['team_name'] ?? '';
       });
     } catch (error) {
       debugPrint('Information note profile load error: $error');
@@ -110,18 +101,9 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
   }
 
   static const Map<String, List<String>> _templateFields = {
-    'Aranan Şahıs': ['Ad soyad', 'Kimlik / eşkâl bilgisi'],
-    'Kaçan Araç': ['Plaka', 'Marka / model / renk'],
-    'Şüpheli Araç': ['Plaka', 'Şüpheli araç bilgisi'],
-    'Trafik Kazası': ['Araçlar ve plakalar', 'Yaralı / hasar bilgisi'],
-    'Asayiş Olayı': ['Olay türü', 'Şüpheli / mağdur bilgisi'],
-    'Hırsızlık': ['Çalınan eşya', 'Tahmini zarar / delil bilgisi'],
-    'Mala Zarar': ['Zarar gören mal', 'Zararın niteliği ve tahmini bedeli'],
-    'Kayıp Çocuk': ['Ad soyad / yaş', 'Son görüldüğü yer ve kıyafet'],
-    'Kayıp Yaşlı': ['Ad soyad / yaş', 'Sağlık ve eşkâl bilgisi'],
-    'Gürültü': ['Şikâyet kaynağı', 'Uyarı / işlem bilgisi'],
-    'Yangın': ['Yangın yeri ve nedeni', 'Can / mal kaybı bilgisi'],
-    'İş Kazası': ['İş yeri / olay türü', 'Yaralanma ve tedavi bilgisi'],
+    'Tutanak': ['İlgili kişiler / sıfatları', 'Tanıklar ve imza sahipleri'],
+    'Bilgi Notu': ['Olay türü', 'Alınan tedbirler ve son durum'],
+    'Mevzuat Ön Değerlendirme': ['İlgili kanun / madde', 'Kontrol edilmesi gereken hususlar'],
   };
 
   List<String> get _activeTemplateFields =>
@@ -164,6 +146,11 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
   Future<void> _saveDraft() async {
     setState(() => _isSaving = true);
     try {
+      await OfficerProfileStorage.instance.save(
+        name: _personnelController.text,
+        badgeNumber: _badgeController.text,
+        teamName: _teamController.text,
+      );
       final draft = _buildDraftPayload();
 
       // 1. Save locally first (always succeeds)
@@ -280,6 +267,11 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
 
     setState(() => _isGeneratingPdf = true);
     try {
+      await OfficerProfileStorage.instance.save(
+        name: _personnelController.text,
+        badgeNumber: _badgeController.text,
+        teamName: _teamController.text,
+      );
       final localId = _currentLocalId!;
       final now = DateTime.now();
 
@@ -308,6 +300,11 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
       final safeFileName = _subjectController.text
           .replaceAll(RegExp(r'[^\w\s-]'), '')
           .replaceAll(' ', '_');
+      final selectedTemplate = _templates[_selectedTemplateIndex];
+      final isTutanak = selectedTemplate == 'Tutanak';
+      final documentTitle = selectedTemplate == 'Mevzuat Ön Değerlendirme'
+          ? 'NİRENGİ - MEVZUAT ÖN DEĞERLENDİRME'
+          : 'NİRENGİ - ${selectedTemplate.toUpperCase()}';
       final pdf = pw.Document();
       pdf.addPage(
         pw.Page(
@@ -317,7 +314,7 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
-                  'NİRENGİ - BİLGİ NOTU',
+                  documentTitle,
                   style: pw.TextStyle(
                     fontSize: 18,
                     fontWeight: pw.FontWeight.bold,
@@ -344,6 +341,20 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
                 ),
                 pw.SizedBox(height: 8),
                 pw.Text(_descriptionController.text),
+                if (isTutanak) ...[
+                  pw.SizedBox(height: 18),
+                  pw.Text(
+                    'İş bu tutanak tarafımızdan tanzimle altı birlikte imza altına alınmıştır.',
+                  ),
+                  pw.SizedBox(height: 18),
+                  pw.Text('${_dateController.text} ${_timeController.text}'),
+                  pw.SizedBox(height: 30),
+                  pw.Text('Düzenleyen personel: ${_personnelController.text}'),
+                  pw.Text('Sicil: ${_badgeController.text}'),
+                ] else if (selectedTemplate == 'Bilgi Notu') ...[
+                  pw.SizedBox(height: 18),
+                  pw.Text('Arz olunur.'),
+                ],
               ],
             ),
           ),
@@ -549,9 +560,6 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
                       isTablet: isTablet,
                       dutyLocationController: _dutyLocationController,
                       gpsController: _gpsController,
-                      onGpsTap: () {
-                        _gpsController.text = '41.0082° K, 28.9784° D';
-                      },
                     ),
                   ),
                 ),
@@ -565,20 +573,6 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
                     child: NoteIncidentDetailWidget(
                       subjectController: _subjectController,
                       descriptionController: _descriptionController,
-                      onMicTap: () {},
-                    ),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-                // ── Attachments group ─────────────────────────────────────
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverToBoxAdapter(
-                    child: NoteAttachmentsWidget(
-                      onCameraTap: () {},
-                      onFileTap: () {},
                     ),
                   ),
                 ),
@@ -656,16 +650,8 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
             color: AppTheme.secondary,
             size: 22,
           ),
-          onPressed: () {},
+          onPressed: () => context.push(AppRoutes.aiAssistantScreen),
           tooltip: 'Yapay Zeka Asistanı',
-        ),
-        IconButton(
-          icon: CustomIconWidget(
-            iconName: 'more_vert',
-            color: Colors.white,
-            size: 22,
-          ),
-          onPressed: () {},
         ),
       ],
     );

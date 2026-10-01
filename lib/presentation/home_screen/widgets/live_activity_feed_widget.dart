@@ -42,9 +42,13 @@ class _LiveActivityFeedWidgetState extends State<LiveActivityFeedWidget>
   void _onEvent(ActivityEvent event) {
     if (!mounted) return;
     setState(() {
+      final existingIndex = _events.indexWhere((item) => item.id == event.id);
+      if (existingIndex >= 0) {
+        _events.removeAt(existingIndex);
+      }
       _events.insert(0, event);
-      // Keep max 20 events in memory
-      if (_events.length > 20) _events.removeLast();
+      // Keep only the latest five unique events visible in the compact feed.
+      if (_events.length > 5) _events.removeRange(5, _events.length);
     });
   }
 

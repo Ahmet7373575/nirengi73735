@@ -101,14 +101,11 @@ class NoteDutyInfoWidget extends StatelessWidget {
   final bool isTablet;
   final TextEditingController dutyLocationController;
   final TextEditingController gpsController;
-  final VoidCallback onGpsTap;
-
   const NoteDutyInfoWidget({
     super.key,
     required this.isTablet,
     required this.dutyLocationController,
     required this.gpsController,
-    required this.onGpsTap,
   });
 
   @override
@@ -126,40 +123,10 @@ class NoteDutyInfoWidget extends StatelessWidget {
                 v == null || v.isEmpty ? 'Görev yeri gerekli' : null,
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _GlassFormField(
-                  controller: gpsController,
-                  label: 'GPS Koordinatları',
-                  iconName: 'location_on',
-                  readOnly: true,
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: onGpsTap,
-                child: Container(
-                  width: 52,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withAlpha(38),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppTheme.primary.withAlpha(77),
-                      width: 1,
-                    ),
-                  ),
-                  child: Center(
-                    child: CustomIconWidget(
-                      iconName: 'my_location',
-                      color: AppTheme.primary,
-                      size: 22,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          _GlassFormField(
+            controller: gpsController,
+            label: 'GPS Koordinatları (isteğe bağlı)',
+            iconName: 'location_on',
           ),
         ],
       ),
