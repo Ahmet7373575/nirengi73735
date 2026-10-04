@@ -199,8 +199,13 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: AppRoutes.informationNoteScreen,
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage(child: InformationNoteScreen()),
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: InformationNoteScreen(
+                  incident: state.extra is IncidentModel
+                      ? state.extra as IncidentModel
+                      : null,
+                ),
+              ),
             ),
           ],
         ),

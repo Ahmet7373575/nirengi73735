@@ -51,7 +51,7 @@ class ToolCardGridWidget extends StatelessWidget {
     ),
     ToolModel(
       id: 'assistant',
-      title: 'Çavuş’a Sor',
+      title: 'Bekçi’ye Sor',
       iconName: 'smart_toy',
       color: Color(0xFF8B5CF6),
       category: 'Yardımcı',

@@ -10,6 +10,7 @@ import 'package:printing/printing.dart';
 import '../../core/app_export.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
+import '../../services/incident_service.dart';
 import '../../services/note_cache_service.dart';
 import '../../services/note_merge_service.dart';
 import '../../services/note_storage_service.dart';
@@ -23,7 +24,9 @@ import './widgets/note_template_selector_widget.dart';
 /// Information Note Screen — Full form for creating official field notes.
 /// Grouped glassmorphism form cards with animated floating labels.
 class InformationNoteScreen extends StatefulWidget {
-  const InformationNoteScreen({super.key});
+  final IncidentModel? incident;
+
+  const InformationNoteScreen({super.key, this.incident});
 
   @override
   State<InformationNoteScreen> createState() => _InformationNoteScreenState();
@@ -65,8 +68,21 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
     _timeController.text =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     _loadOfficerDefaults();
+    _prefillFromIncident();
     // Generate a stable local ID for this note session
     _currentLocalId = 'draft_${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  void _prefillFromIncident() {
+    final incident = widget.incident;
+    if (incident == null) return;
+    _subjectController.text = incident.title;
+    _descriptionController.text = incident.description;
+    _dutyLocationController.text = incident.location ?? '';
+    if (incident.gpsLatitude != null && incident.gpsLongitude != null) {
+      _gpsController.text =
+          '${incident.gpsLatitude!.toStringAsFixed(5)}, ${incident.gpsLongitude!.toStringAsFixed(5)}';
+    }
   }
 
   Future<void> _loadOfficerDefaults() async {

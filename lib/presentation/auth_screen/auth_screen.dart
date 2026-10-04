@@ -230,7 +230,7 @@ class _AuthScreenState extends State<AuthScreen>
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    'Nirengi',
+                    'Bekçi Bilgi Notu',
                     style: GoogleFonts.inter(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w700,

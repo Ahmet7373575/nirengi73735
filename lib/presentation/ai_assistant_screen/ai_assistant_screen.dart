@@ -58,7 +58,7 @@ class _ChatMessage {
 // ─── System prompt builder ─────────────────────────────────────────────────
 String _buildSystemPrompt(DraftType draftType) {
   const base =
-      '''Sen Nirengi uygulamasının yapay zeka asistanısın. Türk emniyet personeline yardım ediyorsun.
+      '''Sen Bekçi Bilgi Notu uygulamasının yapay zeka asistanısın. Türk emniyet personeline yardım ediyorsun.
 Görevin üç ana alanda destek sağlamak:
 
 1. NOT YAZIMI (Note Composition): Kullanıcının anlattığı olayı dinle, eksik bilgileri sormak için takip soruları sor, ardından resmi formatta belge taslağı oluştur.
@@ -169,7 +169,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
           _ChatMessage(
             role: 'assistant',
             content:
-                'Merhaba! Ben Nirengi Yapay Zeka Asistanı (Gemini ile güçlendirilmiştir).\n\n'
+                'Merhaba! Ben Bekçi Bilgi Notu Yapay Zeka Asistanı (Gemini ile güçlendirilmiştir).\n\n'
                 'Size şu konularda yardımcı olabilirim:\n'
                 '📝 **Not Yazımı** — Olayı anlatın, resmi belge taslağı oluşturayım\n'
                 '📋 **Olay Şablonları** — Tutanak, bilgi notu ve rapor şablonları\n'
@@ -455,7 +455,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Yapay Zeka Asistanı',
+                  'Bekçi’ye Sor',
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 15,

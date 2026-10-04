@@ -164,7 +164,7 @@ class _Overview extends StatelessWidget {
     _InfoTile(label: 'Öncelik', value: incident.priority),
     _InfoTile(label: 'Açıklama', value: incident.description),
     const SizedBox(height: 16),
-    FilledButton.icon(onPressed: () => context.push(AppRoutes.informationNoteScreen), icon: const Icon(Icons.description_outlined), label: const Text('Bu dosyaya evrak hazırla')),
+    FilledButton.icon(onPressed: () => context.push(AppRoutes.informationNoteScreen, extra: incident), icon: const Icon(Icons.description_outlined), label: const Text('Bu dosyaya evrak hazırla')),
   ]);
 }
 

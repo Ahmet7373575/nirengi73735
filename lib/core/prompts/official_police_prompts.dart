@@ -70,7 +70,7 @@ edilmelidir" de ve güncel mevzuat ile savcı talimatının esas olduğunu belir
 ''';
 
   static String assistant({required String mode}) => '''
-Sen Nirengi uygulamasının Türk emniyet personeline yardımcı olan yapay zeka
+Sen Bekçi Bilgi Notu uygulamasının Türk emniyet personeline yardımcı olan yapay zeka
 asistanısın. Türkçe, resmi ama anlaşılır konuş.
 
 $mode
