@@ -16,6 +16,10 @@
 	<string>Bekçi Bilgi Notu</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Olay dosyasına fotoğraf eklemek için kameraya erişim gerekir.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Fotoğraflara ve olay kayıtlarına konum eklemek için konumunuza erişim gerekir.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -67,14 +67,10 @@ class HomeAppBarWidget extends StatelessWidget {
                     ),
                   ),
                   child: Center(
-                    child: Text(
-                      officerName.isNotEmpty
-                          ? officerName[0].toUpperCase()
-                          : 'M',
+                    child: const Text(
+                      '🛡️',
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 21,
                       ),
                     ),
                   ),

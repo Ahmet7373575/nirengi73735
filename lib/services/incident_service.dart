@@ -12,6 +12,10 @@ class IncidentModel {
   final String localId;
   final String title;
   final String description;
+  final String? incidentType;
+  final String? crimeName;
+  final String? investigationNumber;
+  final String? neighborhood;
   final String? location;
   final String? reporterName;
   final String priority; // 'low' | 'medium' | 'high' | 'critical'
@@ -32,6 +36,10 @@ class IncidentModel {
     required this.localId,
     required this.title,
     required this.description,
+    this.incidentType,
+    this.crimeName,
+    this.investigationNumber,
+    this.neighborhood,
     this.location,
     this.reporterName,
     required this.priority,
@@ -52,6 +60,10 @@ class IncidentModel {
     'local_id': localId,
     'title': title,
     'description': description,
+    if (incidentType != null) 'incident_type': incidentType,
+    if (crimeName != null) 'crime_name': crimeName,
+    if (investigationNumber != null) 'investigation_number': investigationNumber,
+    if (neighborhood != null) 'neighborhood': neighborhood,
     if (location != null) 'location': location,
     if (reporterName != null) 'reporter_name': reporterName,
     'priority': priority,
@@ -74,6 +86,10 @@ class IncidentModel {
     localId: json['local_id'] as String? ?? '',
     title: json['title'] as String? ?? '',
     description: json['description'] as String? ?? '',
+    incidentType: json['incident_type'] as String?,
+    crimeName: json['crime_name'] as String?,
+    investigationNumber: json['investigation_number'] as String?,
+    neighborhood: json['neighborhood'] as String?,
     location: json['location'] as String?,
     reporterName: json['reporter_name'] as String?,
     priority: json['priority'] as String? ?? 'medium',

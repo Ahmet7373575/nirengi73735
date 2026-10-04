@@ -10,6 +10,7 @@ import 'package:printing/printing.dart';
 import '../../core/app_export.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
+import '../../services/case_folder_service.dart';
 import '../../services/incident_service.dart';
 import '../../services/note_cache_service.dart';
 import '../../services/note_merge_service.dart';
@@ -375,6 +376,27 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
           'user_id': AuthService.instance.currentUserId,
       };
       await NoteCacheService.instance.savePdfRecordLocally(pdfRecord);
+
+      if (widget.incident?.id != null) {
+        try {
+          await CaseFolderService.instance.addDocument(
+            incidentId: widget.incident!.id!,
+            documentType: documentType,
+            title: _subjectController.text.trim().isEmpty
+                ? documentType
+                : _subjectController.text.trim(),
+            fileName: fileName,
+            filePath: file.path,
+          );
+          await CaseFolderService.instance.addActivity(
+            incidentId: widget.incident!.id!,
+            action: 'Evrak Eklendi',
+            description: fileName,
+          );
+        } catch (error) {
+          debugPrint('Case document link error: $error');
+        }
+      }
 
       // 3. Try to sync both to Supabase if online
       final connectivity = await Connectivity().checkConnectivity();

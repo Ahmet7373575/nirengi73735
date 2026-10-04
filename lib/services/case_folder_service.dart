@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:typed_data';
 import 'supabase_service.dart';
 
 class CaseFolderService {
@@ -56,6 +57,63 @@ class CaseFolderService {
       'owner_name': ownerName,
       'notes': notes,
       'user_id': _userId,
+    });
+  }
+
+  Future<Map<String, dynamic>> addDocument({
+    required String incidentId,
+    required String documentType,
+    required String title,
+    String? fileName,
+    String? filePath,
+  }) async {
+    final row = await _client.from('case_documents').insert({
+      'incident_id': incidentId,
+      'document_type': documentType,
+      'title': title,
+      'file_name': fileName,
+      'file_path': filePath,
+      'status': 'draft',
+      'created_by': _userId,
+    }).select().single();
+    return Map<String, dynamic>.from(row);
+  }
+
+  Future<Map<String, dynamic>> addMedia({
+    required String incidentId,
+    required String fileName,
+    required Uint8List bytes,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final userId = _userId;
+    if (userId == null) throw StateError('Oturum açılmadan medya eklenemez.');
+    final path = '$userId/$incidentId/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+    await _client.storage.from('case-media').uploadBinary(
+      path,
+      bytes,
+      fileOptions: const FileOptions(upsert: false, contentType: 'image/jpeg'),
+    );
+    final publicUrl = _client.storage.from('case-media').getPublicUrl(path);
+    final row = await _client.from('case_media').insert({
+      'incident_id': incidentId,
+      'media_type': 'photo',
+      'file_name': fileName,
+      'file_path': publicUrl,
+      'latitude': latitude,
+      'longitude': longitude,
+      'captured_at': DateTime.now().toIso8601String(),
+      'created_by': userId,
+    }).select().single();
+    return Map<String, dynamic>.from(row);
+  }
+
+  Future<void> addActivity({required String incidentId, required String action, required String description}) async {
+    await _client.from('case_activity_log').insert({
+      'incident_id': incidentId,
+      'action': action,
+      'description': description,
+      'actor_id': _userId,
     });
   }
 }

@@ -48,6 +48,10 @@ class _RapidIncidentScreenState extends ConsumerState<RapidIncidentScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _incidentTypeController = TextEditingController();
+  final _crimeController = TextEditingController();
+  final _investigationController = TextEditingController();
+  final _neighborhoodController = TextEditingController();
   final _locationController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _reporterController = TextEditingController();
@@ -149,6 +153,10 @@ class _RapidIncidentScreenState extends ConsumerState<RapidIncidentScreen>
   @override
   void dispose() {
     _titleController.dispose();
+    _incidentTypeController.dispose();
+    _crimeController.dispose();
+    _investigationController.dispose();
+    _neighborhoodController.dispose();
     _locationController.dispose();
     _descriptionController.dispose();
     _reporterController.dispose();
@@ -279,6 +287,10 @@ Sadece JSON döndür, başka açıklama ekleme.
         localId: localId,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
+        incidentType: _incidentTypeController.text.trim().isEmpty ? null : _incidentTypeController.text.trim(),
+        crimeName: _crimeController.text.trim().isEmpty ? null : _crimeController.text.trim(),
+        investigationNumber: _investigationController.text.trim().isEmpty ? null : _investigationController.text.trim(),
+        neighborhood: _neighborhoodController.text.trim().isEmpty ? null : _neighborhoodController.text.trim(),
         location: _locationController.text.trim().isEmpty
             ? null
             : _locationController.text.trim(),
@@ -400,6 +412,10 @@ Sadece JSON döndür, başka açıklama ekleme.
       _aiReasoning = null;
       _aiSuggestionApplied = false;
       _titleController.clear();
+      _incidentTypeController.clear();
+      _crimeController.clear();
+      _investigationController.clear();
+      _neighborhoodController.clear();
       _locationController.clear();
       _descriptionController.clear();
       _reporterController.clear();
@@ -591,6 +607,19 @@ Sadece JSON döndür, başka açıklama ekleme.
                   (v == null || v.trim().isEmpty) ? 'Başlık zorunludur' : null,
               maxLines: 1,
             ),
+
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(child: TextFormField(controller: _incidentTypeController, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white), decoration: const InputDecoration(labelText: 'Olay türü', hintText: 'Asayiş / Trafik'))),
+              const SizedBox(width: 10),
+              Expanded(child: TextFormField(controller: _crimeController, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white), decoration: const InputDecoration(labelText: 'Suç adı'))),
+            ]),
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(child: TextFormField(controller: _investigationController, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white), decoration: const InputDecoration(labelText: 'Soruşturma no'))),
+              const SizedBox(width: 10),
+              Expanded(child: TextFormField(controller: _neighborhoodController, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white), decoration: const InputDecoration(labelText: 'Mahalle'))),
+            ]),
 
             const SizedBox(height: 16),
 

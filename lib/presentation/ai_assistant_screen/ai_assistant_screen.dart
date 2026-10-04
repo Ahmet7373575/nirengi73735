@@ -444,7 +444,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
-              Icons.smart_toy_rounded,
+              Icons.shield_outlined,
               color: Colors.white,
               size: 22,
             ),
