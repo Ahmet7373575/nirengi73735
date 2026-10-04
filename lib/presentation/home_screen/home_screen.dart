@@ -199,31 +199,3 @@ class _PromoCard extends StatelessWidget {
         ),
       );
 }
-
-class _BottomQuickBar extends StatelessWidget {
-  final ValueChanged<String> onOpen;
-  const _BottomQuickBar({required this.onOpen});
-  @override
-  Widget build(BuildContext context) => Material(
-        color: const Color(0xFFF9F8FD),
-        elevation: 12,
-        borderRadius: BorderRadius.circular(28),
-        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), child: Row(children: [
-          _QuickAction(icon: Icons.home_rounded, label: 'Ana Sayfa', active: true, onTap: () {}),
-          _QuickAction(icon: Icons.folder_outlined, label: 'Dosyalar', onTap: () => onOpen('cases')),
-          _QuickAction(icon: Icons.add_circle_outline, label: 'Yeni', onTap: () => onOpen('tutanak')),
-          _QuickAction(icon: Icons.shield_outlined, label: 'Bekçi', onTap: () => onOpen('assistant')),
-          _QuickAction(icon: Icons.person_outline, label: 'Profil', onTap: () => onOpen('profile')),
-        ])),
-      );
-}
-
-class _QuickAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _QuickAction({required this.icon, required this.label, this.active = false, required this.onTap});
-  @override
-  Widget build(BuildContext context) => Expanded(child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(22), child: Padding(padding: const EdgeInsets.symmetric(vertical: 5), child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 22, color: active ? const Color(0xFF5E3B95) : const Color(0xFF77718B)), const SizedBox(height: 2), Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: active ? const Color(0xFF5E3B95) : const Color(0xFF77718B)))])));
-}
