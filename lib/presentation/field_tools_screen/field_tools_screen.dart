@@ -115,7 +115,39 @@ class _FieldToolsScreenState extends State<FieldToolsScreen>
 
   void _showPenalty() {
     final p = _penalties[_selectedPenalty];
-    showModalBottomSheet<void>(context: context, isScrollControlled: true, builder: (_) => SafeArea(child: Padding(padding: const EdgeInsets.all(22), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(p['title']!, style: Theme.of(context).textTheme.headlineSmall), const SizedBox(height: 8), Text(p['law']!), const SizedBox(height: 18), Text(p['amount']!, style: const TextStyle(color: AppTheme.warning, fontSize: 28, fontWeight: FontWeight.w800)), const SizedBox(height: 14), _detail('Karar makamı', p['authority']!), _detail('İtiraz mercii', 'Sulh Ceza Hâkimliği'), _detail('İtiraz süresi', '15 gün'), _detail('Ödeme süresi', '1 ay'), _detail('Tekerrür', 'Mevzuata göre değerlendirilir'), _detail('Tanzim edilecek evrak', p['document']!), const SizedBox(height: 12), FilledButton.icon(onPressed: () { Navigator.pop(context); _message('Mevzuat maddesi not ekranına aktarılmaya hazır.'); }, icon: const Icon(Icons.note_add_outlined), label: const Text('Not olarak kullan'))])));
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(p['title']!, style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 8),
+              Text(p['law']!),
+              const SizedBox(height: 18),
+              Text(p['amount']!, style: const TextStyle(color: AppTheme.warning, fontSize: 28, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 14),
+              _detail('Karar makamı', p['authority']!),
+              _detail('İtiraz mercii', 'Sulh Ceza Hâkimliği'),
+              _detail('İtiraz süresi', '15 gün'),
+              _detail('Ödeme süresi', '1 ay'),
+              _detail('Tekerrür', 'Mevzuata göre değerlendirilir'),
+              _detail('Tanzim edilecek evrak', p['document']!),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () { Navigator.pop(context); _message('Mevzuat maddesi not ekranına aktarılmaya hazır.'); },
+                icon: const Icon(Icons.note_add_outlined),
+                label: const Text('Not olarak kullan'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _detail(String label, String value) => Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Row(children: [Expanded(child: Text(label, style: const TextStyle(color: Colors.grey))), Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600)))]));
@@ -124,11 +156,53 @@ class _FieldToolsScreenState extends State<FieldToolsScreen>
   @override
   Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Saha Araçları'), bottom: TabBar(controller: _tabs, isScrollable: true, tabs: const [Tab(icon: Icon(Icons.gavel_outlined), text: 'Mevzuat'), Tab(icon: Icon(Icons.calendar_month_outlined), text: 'Nöbet'), Tab(icon: Icon(Icons.sticky_note_2_outlined), text: 'Notlar'), Tab(icon: Icon(Icons.document_scanner_outlined), text: 'Kamera'), Tab(icon: Icon(Icons.qr_code_scanner), text: 'QR')])) , body: TabBarView(controller: _tabs, children: [_penaltyView(), _dutyView(), _notesView(), _cameraView(), _qrView()]));
 
-  Widget _penaltyView() => Column(children: [Padding(padding: const EdgeInsets.all(14), child: TextField(controller: _search, onChanged: (_) => setState(() {}), decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Kanun, madde veya kabahat ara...'))), Expanded(child: ListView.builder(itemCount: _filteredPenalties.length, itemBuilder: (_, i) { final p = _filteredPenalties[i]; final index = _penalties.indexOf(p); return Card(child: ListTile(onTap: () { setState(() => _selectedPenalty = index); _showPenalty(); }, leading: const CircleAvatar(child: Icon(Icons.gavel_outlined)), title: Text(p['title']!), subtitle: Text(p['law']!), trailing: Text(p['amount']!, style: const TextStyle(color: AppTheme.warning, fontWeight: FontWeight.w800))); }))]);
+  Widget _penaltyView() => Column(
+    children: [
+      Padding(
+        padding: const EdgeInsets.all(14),
+        child: TextField(controller: _search, onChanged: (_) => setState(() {}), decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Kanun, madde veya kabahat ara...')),
+      ),
+      Expanded(
+        child: ListView.builder(
+          itemCount: _filteredPenalties.length,
+          itemBuilder: (_, i) {
+            final p = _filteredPenalties[i];
+            final index = _penalties.indexOf(p);
+            return Card(
+              child: ListTile(
+                onTap: () { setState(() => _selectedPenalty = index); _showPenalty(); },
+                leading: const CircleAvatar(child: Icon(Icons.gavel_outlined)),
+                title: Text(p['title']!),
+                subtitle: Text(p['law']!),
+                trailing: Text(p['amount']!, style: const TextStyle(color: AppTheme.warning, fontWeight: FontWeight.w800)),
+              ),
+            );
+          },
+        ),
+      ),
+    ],
+  );
 
   Widget _dutyView() => ListView(padding: const EdgeInsets.all(16), children: [Text('Nöbet ve görev planı', style: Theme.of(context).textTheme.headlineSmall), const SizedBox(height: 8), const Text('Seçtiğiniz başlangıç saatinde her gün tekrar edecek şekilde planlanır.'), const SizedBox(height: 18), DropdownButtonFormField<String>(value: _system, decoration: const InputDecoration(labelText: 'Çalışma sistemi'), items: const ['12 / 36 Sistemi', '12 / 24 Sistemi', '8 / 24 Sistemi'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) => setState(() => _system = x!)), DropdownButtonFormField<String>(value: _shift, decoration: const InputDecoration(labelText: 'Vardiya'), items: const ['Gündüz', 'Gece'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) => setState(() => _shift = x!)), DropdownButtonFormField<String>(value: _activity, decoration: const InputDecoration(labelText: 'Faaliyet'), items: const ['Önleyici Devriye Faaliyeti', 'Cadde ve Sokak Kontrol Uygulaması', 'Şok Uygulama / Denetim', 'Sabit Nokta / Çevre Güvenlik Nöbeti', 'Huzur Güven Uygulaması', 'Park ve Bahçe Denetimi'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (x) => setState(() => _activity = x!)), TextField(controller: _task, decoration: const InputDecoration(labelText: 'Görev adı')), Row(children: [Expanded(child: TextField(controller: _start, decoration: const InputDecoration(labelText: 'Başlangıç'))), const SizedBox(width: 10), Expanded(child: TextField(controller: _end, decoration: const InputDecoration(labelText: 'Bitiş')))]), ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.event), title: Text(_firstDutyDay.isEmpty ? 'İlk nöbet gününü seç' : _firstDutyDay), onTap: () async { final d = await showDatePicker(context: context, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 730)), initialDate: DateTime.now()); if (d != null) setState(() => _firstDutyDay = '${d.day}.${d.month}.${d.year}'); }), FilledButton.icon(onPressed: () => _message('Görev planı yerel olarak kaydedildi; cihaz bildirim izniyle alarm kurulabilir.'), icon: const Icon(Icons.alarm_add), label: const Text('Görevi kaydet ve alarm kur'))]);
 
-  Widget _notesView() => ListView(padding: const EdgeInsets.all(16), children: [Text('Kategorili not defteri', style: Theme.of(context).textTheme.headlineSmall), const SizedBox(height: 12), Wrap(spacing: 8, children: ['Olay', 'Şahıs', 'Mevzuat', 'Özel'].map((x) => ChoiceChip(label: Text(x), selected: x == _category, onSelected: (_) => setState(() => _category = x)).toList()), const SizedBox(height: 14), TextField(controller: _noteTitle, decoration: const InputDecoration(labelText: 'Hızlı not başlığı')), TextField(controller: _noteBody, maxLines: 5, decoration: const InputDecoration(labelText: 'Not detayı')), const SizedBox(height: 12), FilledButton.icon(onPressed: _saveNote, icon: const Icon(Icons.save_outlined), label: const Text('Yerel notu kaydet')), const SizedBox(height: 18), ..._notes.map((n) => Card(child: ListTile(leading: const Icon(Icons.sticky_note_2_outlined, color: AppTheme.primary), title: Text(n['title']!), subtitle: Text('${n['category']} · ${n['body']}'))))]);
+  Widget _notesView() => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      Text('Kategorili not defteri', style: Theme.of(context).textTheme.headlineSmall),
+      const SizedBox(height: 12),
+      Wrap(
+        spacing: 8,
+        children: ['Olay', 'Şahıs', 'Mevzuat', 'Özel'].map((x) => ChoiceChip(label: Text(x), selected: x == _category, onSelected: (_) => setState(() => _category = x))).toList(),
+      ),
+      const SizedBox(height: 14),
+      TextField(controller: _noteTitle, decoration: const InputDecoration(labelText: 'Hızlı not başlığı')),
+      TextField(controller: _noteBody, maxLines: 5, decoration: const InputDecoration(labelText: 'Not detayı')),
+      const SizedBox(height: 12),
+      FilledButton.icon(onPressed: _saveNote, icon: const Icon(Icons.save_outlined), label: const Text('Yerel notu kaydet')),
+      const SizedBox(height: 18),
+      ..._notes.map((n) => Card(child: ListTile(leading: const Icon(Icons.sticky_note_2_outlined, color: AppTheme.primary), title: Text(n['title']!), subtitle: Text('${n['category']} · ${n['body']}')))),
+    ],
+  );
 
   Widget _cameraView() => ListView(padding: const EdgeInsets.all(16), children: [Text('Belge kamerası', style: Theme.of(context).textTheme.headlineSmall), const SizedBox(height: 8), const Text('Resmî evrakı fotoğraflayıp olay dosyasına eklemek için kamera kullanın.'), const SizedBox(height: 18), Container(height: 230, alignment: Alignment.center, decoration: BoxDecoration(color: AppTheme.surfaceVariantDark, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppTheme.glassBorder)), child: _cameraFile.isEmpty ? const Icon(Icons.document_scanner_outlined, size: 72, color: AppTheme.primary) : Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.check_circle, size: 48, color: AppTheme.success), Text(_cameraFile)])), const SizedBox(height: 12), FilledButton.icon(onPressed: _pickDocument, icon: const Icon(Icons.camera_alt_outlined), label: const Text('Belge çek')), const SizedBox(height: 8), const Text('Flaş, kadraj ve belge netliği cihaz kamerası tarafından yönetilir.', style: TextStyle(color: Colors.grey))]);
 
