@@ -42,6 +42,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'profile':
         context.go(AppRoutes.profileScreen);
         break;
+      case 'tools':
+        context.push(AppRoutes.fieldToolsScreen);
+        break;
     }
   }
 
@@ -136,6 +139,7 @@ class _FeaturePanel extends StatelessWidget {
               _FeatureCard(title: 'Bilgi Notu', subtitle: 'Resmi bilgi notunu hızlıca hazırla', icon: Icons.description_outlined, color: const Color(0xFFFFF0E6), accent: const Color(0xFFE98A2A), onTap: () => onOpen('note')),
               _FeatureCard(title: 'Tutanak Hazırla', subtitle: 'Olayı kaydet ve tutanağa dönüştür', icon: Icons.edit_document, color: const Color(0xFFEEF5D8), accent: const Color(0xFF6BA847), onTap: () => onOpen('tutanak')),
               _FeatureCard(title: 'Bekçi’ye Sor', subtitle: 'Mevzuat ve dosya yardımcın hazır', icon: Icons.shield_outlined, color: const Color(0xFFF0ECF9), accent: const Color(0xFF57338D), onTap: () => onOpen('assistant')),
+              _FeatureCard(title: 'Saha Araçları', subtitle: 'Ceza, nöbet, not, kamera ve QR', icon: Icons.widgets_outlined, color: const Color(0xFFEAF4FC), accent: const Color(0xFF276A9A), onTap: () => onOpen('tools')),
             ],
           ),
           const SizedBox(height: 16),

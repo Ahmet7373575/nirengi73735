@@ -52,11 +52,55 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final Map<String, TextEditingController> _templateControllers = {};
+  String _legalDisposition = 'İfade Sonrası Serbest';
+  String _medicalStatus = 'BTM ile Giderilir';
 
   final List<String> _templates = [
     'Tutanak',
     'Bilgi Notu',
-    'Mevzuat / Değerlendirme',
+    'Kasten Yaralama Olayı',
+    'Uyuşturucu Madde Ele Geçirme',
+    'Aranan Şahıs Tespit Tutanağı',
+    'Şüpheli Şahıs Kontrolü',
+    'Şüpheli Araç Kontrolü',
+    'Kimlik Tespit Tutanağı',
+    'Üst Arama Tutanağı',
+    'İşyeri Denetim Tutanağı',
+    'Kayıp Şahıs Müracaatı',
+    'Kayıp Eşya Tespit Tutanağı',
+    'Buluntu Eşya Teslim Tutanağı',
+    'Gürültü İhbarı Tutanağı',
+    'Kabahat Tespit Tutanağı',
+    'Dilencilik Tespit Tutanağı',
+    'Sarhoşluk Tespit Tutanağı',
+    'Mala Zarar Verme Olayı',
+    'Hırsızlık Olayı',
+    'Tehdit Olayı',
+    'Hakaret Olayı',
+    'Trafik Kazası Tespit Tutanağı',
+    'Trafik İdari Yaptırım Tutanağı',
+    'Yol Kontrol Uygulaması',
+    'Önleyici Kolluk Devriyesi',
+    'Şok Uygulaması',
+    'Yol Emniyet ve Kontrol Faaliyeti',
+    'TEM Faaliyeti',
+    'YKN Kontrolü',
+    'Görev Teslim Tutanağı',
+    'Nöbet Devir Teslimi',
+    'İfade Alma Tutanağı',
+    'Yakalama Tutanağı',
+    'Gözaltı Tutanağı',
+    'Adli Arama Tutanağı',
+    'Emanet Eşya Teslimi',
+    'Fotoğraf Tespit Tutanağı',
+    'Kamera Kayıt İnceleme',
+    'Olay Yeri Tespit',
+    'Hayati Tehlike Tespiti',
+    'Ailesine Teslim Tutanağı',
+    'Çocuk Yuvasına Teslim',
+    'Adliyeye Sevk Tutanağı',
+    'Serbest Bırakma Tutanağı',
+    'Görev Raporu',
   ];
 
   @override
@@ -124,7 +168,8 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
   };
 
   List<String> get _activeTemplateFields =>
-      _templateFields[_templates[_selectedTemplateIndex]] ?? const [];
+      _templateFields[_templates[_selectedTemplateIndex]] ??
+      const ['Hazır bulunanlar', 'Tespit edilen hususlar'];
 
   TextEditingController _controllerForTemplateField(String field) {
     return _templateControllers.putIfAbsent(
@@ -152,6 +197,8 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
       'gps_coordinates': _gpsController.text,
       'subject': _subjectController.text,
       'description': _descriptionController.text,
+      'legal_disposition': _legalDisposition,
+      'medical_status': _medicalStatus,
       'template_data': _templateValues(),
       'status': 'draft',
       'is_synced': false,
@@ -261,6 +308,8 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
       _gpsController.text = draft['gps_coordinates']?.toString() ?? '';
       _subjectController.text = draft['subject']?.toString() ?? '';
       _descriptionController.text = draft['description']?.toString() ?? '';
+      _legalDisposition = draft['legal_disposition']?.toString() ?? _legalDisposition;
+      _medicalStatus = draft['medical_status']?.toString() ?? _medicalStatus;
       final templateData = draft['template_data'];
       if (templateData is Map) {
         for (final entry in templateData.entries) {
@@ -296,6 +345,8 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
         'gps_coordinates': _gpsController.text,
         'subject': _subjectController.text,
         'description': _descriptionController.text,
+        'legal_disposition': _legalDisposition,
+        'medical_status': _medicalStatus,
         'template_data': _templateValues(),
         'submitted_at': now.toIso8601String(),
         if (AuthService.instance.currentUserId != null)
@@ -339,6 +390,8 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
                 _pdfRow('Konu', _subjectController.text, regular, bold),
                 _pdfRow('Hazırlayan', '${_personnelController.text} - Sicil: ${_badgeController.text}', regular, bold),
                 _pdfRow('Birim / Ekip', _teamController.text, regular, bold),
+                _pdfRow('Adli durum', _legalDisposition, regular, bold),
+                _pdfRow('Adli muayene / rapor', _medicalStatus, regular, bold),
               ],
             ),
             pw.SizedBox(height: 18),
@@ -522,8 +575,79 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
               ),
             ),
           ),
+          const Divider(height: 24),
+          Text(
+            'Dinamik değişken ekle',
+            style: theme.textTheme.labelLarge?.copyWith(color: AppTheme.primary),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _variableChip('+ Metin', '[Metin]', theme),
+              _variableChip('+ Tarih', '[Tarih]', theme),
+              _variableChip('+ Saat', '[Saat]', theme),
+              _variableChip('+ Seçenek', '[Seçenek]', theme),
+              _variableChip('+ Yaş/Cins.', '[Yaş/Cins]', theme),
+            ],
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _legalDisposition,
+            decoration: const InputDecoration(labelText: 'Şahıs adli durumu'),
+            items: const [
+              'İfade Sonrası Serbest',
+              'Ailesine Teslim (18 Yaş Altı)',
+              'Çocuk Yuvasına Teslim (18 Yaş Altı)',
+              'Adliyeye Sevk / Gözaltı',
+              'Diğer / Manuel Olarak Yazacağım',
+            ].map((value) => DropdownMenuItem(value: value, child: Text(value))).toList(),
+            onChanged: (value) => setState(() => _legalDisposition = value ?? _legalDisposition),
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            value: _medicalStatus,
+            decoration: const InputDecoration(labelText: 'Adli muayene / rapor durumu'),
+            items: const [
+              'BTM ile Giderilir',
+              'BTM ile Giderilemez',
+              'Hayati Tehlike VAR',
+            ].map((value) => DropdownMenuItem(value: value, child: Text(value))).toList(),
+            onChanged: (value) => setState(() => _medicalStatus = value ?? _medicalStatus),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Nasıl Kullanılır?'),
+                  content: const Text('Şablonu seçin, değişken butonlarıyla metin alanına işaretler ekleyin. Tarih, saat, seçenek ve yaş/cinsiyet bilgilerini belgeyi hazırlarken doldurun. Tüm şablonlar ücretsiz ve sınırsız yerel olarak kullanılabilir.'),
+                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Anladım'))],
+                ),
+              ),
+              icon: const Icon(Icons.help_outline, size: 17),
+              label: const Text('Nasıl Kullanılır?'),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _variableChip(String label, String token, ThemeData theme) {
+    return ActionChip(
+      label: Text(label),
+      onPressed: () {
+        final current = _descriptionController.text;
+        final separator = current.isEmpty || current.endsWith(' ') ? '' : ' ';
+        _descriptionController.text = '$current$separator$token ';
+        _descriptionController.selection = TextSelection.collapsed(
+          offset: _descriptionController.text.length,
+        );
+      },
+      labelStyle: TextStyle(color: theme.colorScheme.onSurface),
     );
   }
 

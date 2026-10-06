@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../providers/chat_notifier.dart';
 import '../../widgets/custom_icon_widget.dart';
 
@@ -134,6 +135,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
 
   // Gemini is the configured provider; OpenAI is not required for this build.
   bool _useOpenAI = false;
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
 
   ChatConfig get _config => _useOpenAI
       ? const ChatConfig(
@@ -251,6 +254,38 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
         );
       }
     });
+  }
+
+  Future<void> _toggleVoiceInput() async {
+    if (_isListening) {
+      await _speech.stop();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+    final available = await _speech.initialize(
+      onStatus: (status) {
+        if (mounted && status == 'notListening') {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (error) {
+        if (mounted) {
+          setState(() => _isListening = false);
+          Fluttertoast.showToast(msg: 'Mikrofon kullanılamadı: ${error.errorMsg}');
+        }
+      },
+    );
+    if (!available || !mounted) {
+      Fluttertoast.showToast(msg: 'Konuşma tanıma bu cihazda kullanılamıyor.');
+      return;
+    }
+    setState(() => _isListening = true);
+    await _speech.listen(
+      localeId: 'tr_TR',
+      onResult: (result) {
+        if (mounted) setState(() => _inputController.text = result.recognizedWords);
+      },
+    );
   }
 
   // ── Copy draft to clipboard ────────────────────────────────────────────
@@ -1236,6 +1271,32 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                     onSubmitted: (_) {
                       if (!chatState.isLoading) _sendMessage();
                     },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: chatState.isLoading ? null : _toggleVoiceInput,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: _isListening
+                        ? const Color(0xFFEF4444).withAlpha(45)
+                        : Colors.white.withAlpha(12),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _isListening
+                          ? const Color(0xFFEF4444)
+                          : Colors.white.withAlpha(20),
+                    ),
+                  ),
+                  child: Icon(
+                    _isListening ? Icons.mic_off_rounded : Icons.mic_rounded,
+                    color: _isListening
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFFB0B0C8),
+                    size: 20,
                   ),
                 ),
               ),

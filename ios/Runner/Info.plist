@@ -54,8 +54,10 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Olay fotoğraflarını kaydetmek için fotoğraf kitaplığı erişimi gereklidir.</string>
 	<!-- Microphone permission -->
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Sesli not dikte etmek için mikrofon erişimi gereklidir.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Sesli not dikte etmek için mikrofon erişimi gereklidir.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>Bekçi’ye Sor ekranında sesli komutları metne çevirmek için konuşma tanıma kullanılır.</string>
 	<!-- Location permission -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Olay konumunu otomatik doldurmak için konum erişimi gereklidir.</string>

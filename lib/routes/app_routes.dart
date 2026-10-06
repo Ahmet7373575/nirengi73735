@@ -9,6 +9,7 @@ import '../presentation/rapid_incident_screen/rapid_incident_screen.dart';
 import '../presentation/notification_preferences_screen/notification_preferences_screen.dart';
 import '../presentation/case_folder_screen/case_folder_screen.dart';
 import '../presentation/case_detail_screen/case_detail_screen.dart';
+import '../presentation/field_tools_screen/field_tools_screen.dart';
 import '../services/auth_service.dart';
 import '../services/incident_service.dart';
 import '../widgets/app_scaffold.dart';
@@ -28,6 +29,7 @@ class AppRoutes {
       '/notification-preferences-screen';
   static const String caseFolderScreen = '/case-folders';
   static const String caseDetailScreen = '/case-detail';
+  static const String fieldToolsScreen = '/field-tools';
 }
 
 /// Top-level GoRouter instance with auth redirect guard.
@@ -179,6 +181,10 @@ final GoRouter appRouter = GoRouter(
         if (incident is! IncidentModel) return const CaseFolderScreen();
         return CaseDetailScreen(incident: incident);
       },
+    ),
+    GoRoute(
+      path: AppRoutes.fieldToolsScreen,
+      builder: (context, state) => const FieldToolsScreen(),
     ),
 
     // ── StatefulShellRoute — persistent bottom nav tabs ──────────────────
