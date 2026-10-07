@@ -109,7 +109,7 @@ class LocalCaseStorage {
       },
     );
     final row = {
-      'local_id': '${collection}_$incidentId_${DateTime.now().microsecondsSinceEpoch}',
+      'local_id': '${collection}_${incidentId}_${DateTime.now().microsecondsSinceEpoch}',
       'created_at': DateTime.now().toIso8601String(),
       ...value,
     };

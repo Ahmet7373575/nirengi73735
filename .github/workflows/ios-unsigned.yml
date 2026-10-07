@@ -37,7 +37,7 @@ jobs:
           export CODE_SIGNING_REQUIRED=NO
           export CODE_SIGN_IDENTITY=""
           flutter build ios --release --no-codesign \
-            --dart-define=SUPABASE_URL="https://lfwqxxslfvxjfoobztst.supabase.co" \
+            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxmd3F4eHNsZnZ4amZvb2J6dHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NjE4MzIsImV4cCI6MjEwNjAzNzgzMn0.YTO9XdYIGxCiZWpBJA-0iZ2DWh6f3j24l68_teHoYac" || true
           rm -rf build/ios/unsigned-derived
           xcodebuild \
