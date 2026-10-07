@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
+import '../../services/supabase_service.dart';
 import '../../theme/app_theme.dart';
 
 /// Login / Sign-up screen for field officers.
@@ -80,6 +81,14 @@ class _AuthScreenState extends State<AuthScreen>
   Future<void> _submit() async {
     // Dismiss keyboard
     FocusScope.of(context).unfocus();
+
+    // A build without cloud secrets is still a valid local-first build. Do
+    // not expose a Supabase StateError to the officer; open the local app.
+    if (!SupabaseService.isInitialized) {
+      await AuthService.instance.enableOfflineMode();
+      if (mounted) context.go(AppRoutes.homeScreen);
+      return;
+    }
 
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (!mounted) return;
