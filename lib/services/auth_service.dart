@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import './supabase_service.dart';
 
@@ -7,6 +8,9 @@ class AuthService {
   static AuthService? _instance;
   static AuthService get instance => _instance ??= AuthService._();
   AuthService._();
+
+  static const _offlineModeKey = 'bekci_offline_mode';
+  static bool _offlineMode = false;
 
   SupabaseClient get _client => SupabaseService.instance.client;
 
@@ -17,6 +21,20 @@ class AuthService {
 
   /// Returns the current user's UUID, or null.
   String? get currentUserId => currentUser?.id;
+
+  /// Restores the device-only session before GoRouter evaluates redirects.
+  Future<void> loadLocalSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    _offlineMode = prefs.getBool(_offlineModeKey) ?? false;
+  }
+
+  bool get isOfflineMode => _offlineMode;
+
+  Future<void> enableOfflineMode() async {
+    _offlineMode = true;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_offlineModeKey, true);
+  }
 
   /// Stream of auth state changes.
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
@@ -135,6 +153,9 @@ class AuthService {
 
   /// Sign out the current user.
   Future<void> signOut() async {
+    _offlineMode = false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_offlineModeKey, false);
     try {
       await _client.auth.signOut();
     } catch (e) {
@@ -143,5 +164,5 @@ class AuthService {
   }
 
   /// Returns true if a user is currently signed in.
-  bool get isAuthenticated => currentUser != null;
+  bool get isAuthenticated => _offlineMode || currentUser != null;
 }

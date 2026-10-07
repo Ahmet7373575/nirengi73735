@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import './local_case_storage.dart';
 import './supabase_service.dart';
 
 /// Model for a rapid incident submission.
@@ -165,6 +166,13 @@ class IncidentService {
 
   /// Submit a new incident to Supabase. Returns the created incident's UUID.
   Future<String?> submitIncident(IncidentModel incident) async {
+    // The field workflow must work before login and without connectivity.
+    // Commit the record locally first; cloud sync is best effort below.
+    await LocalCaseStorage.saveIncident(incident.toJson());
+    if (!SupabaseService.isInitialized) {
+      await _queueLocally(incident);
+      return null;
+    }
     try {
       final userId = _client.auth.currentUser?.id;
       final payload = incident.toJson();
@@ -260,9 +268,16 @@ class IncidentService {
 
   /// Fetch recent incidents for the current user.
   Future<List<IncidentModel>> fetchMyIncidents({int limit = 20}) async {
+    final localRows = await LocalCaseStorage.incidents();
+    final localItems = localRows
+        .map(IncidentModel.fromJson)
+        .toList(growable: true);
+    if (!SupabaseService.isInitialized) {
+      return localItems.take(limit).toList();
+    }
     try {
       final userId = _client.auth.currentUser?.id;
-      if (userId == null) return [];
+      if (userId == null) return localItems.take(limit).toList();
 
       final response = await _client
           .from('incidents')
@@ -271,13 +286,18 @@ class IncidentService {
           .order('submitted_at', ascending: false)
           .limit(limit);
 
-      return (response as List)
+      final cloudItems = (response as List)
           .map((e) => IncidentModel.fromJson(e as Map<String, dynamic>))
           .toList();
+      final known = cloudItems.map((item) => item.localId).toSet();
+      cloudItems.addAll(
+        localItems.where((item) => !known.contains(item.localId)),
+      );
+      return cloudItems.take(limit).toList();
     } catch (e) {
       // ignore: avoid_print
       print('[IncidentService] fetchMyIncidents error: $e');
-      return [];
+      return localItems.take(limit).toList();
     }
   }
 

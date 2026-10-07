@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import './presentation/notification_preferences_screen/notification_preferences_screen.dart';
 import './services/activity_feed_service.dart';
+import './services/auth_service.dart';
 import './services/incident_service.dart';
 import './services/note_cache_service.dart';
 import './services/notification_service.dart';
@@ -55,6 +56,13 @@ void main() {
         await IncidentService.instance.syncPendingIncidents();
       } catch (e) {
         debugPrint('Failed to initialize Supabase: $e');
+      }
+
+      // Restore the local device-only session before GoRouter redirects.
+      try {
+        await AuthService.instance.loadLocalSession();
+      } catch (e) {
+        debugPrint('Failed to restore local session: $e');
       }
 
       // Load notification preferences into static cache

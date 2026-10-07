@@ -114,6 +114,7 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     _loadOfficerDefaults();
     _prefillFromIncident();
+    _loadCaseEntities();
     // Generate a stable local ID for this note session
     _currentLocalId = 'draft_${DateTime.now().millisecondsSinceEpoch}';
   }
@@ -127,6 +128,38 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
     if (incident.gpsLatitude != null && incident.gpsLongitude != null) {
       _gpsController.text =
           '${incident.gpsLatitude!.toStringAsFixed(5)}, ${incident.gpsLongitude!.toStringAsFixed(5)}';
+    }
+  }
+
+  Future<void> _loadCaseEntities() async {
+    final incident = widget.incident;
+    if (incident == null) return;
+    try {
+      final incidentId = incident.id ?? incident.localId;
+      final values = await Future.wait([
+        CaseFolderService.instance.persons(incidentId),
+        CaseFolderService.instance.vehicles(incidentId),
+      ]);
+      if (!mounted) return;
+      final persons = values[0]
+          .map((item) => item['full_name']?.toString())
+          .whereType<String>()
+          .where((name) => name.trim().isNotEmpty)
+          .join(', ');
+      final vehicles = values[1]
+          .map((item) => item['plate']?.toString())
+          .whereType<String>()
+          .where((plate) => plate.trim().isNotEmpty)
+          .join(', ');
+      final contextLines = <String>[
+        if (persons.isNotEmpty) 'Şahıslar: $persons',
+        if (vehicles.isNotEmpty) 'Araçlar: $vehicles',
+      ];
+      if (contextLines.isEmpty) return;
+      final field = _controllerForTemplateField(_activeTemplateFields.first);
+      if (field.text.trim().isEmpty) field.text = contextLines.join('\n');
+    } catch (error) {
+      debugPrint('Case entity prefill error: $error');
     }
   }
 
@@ -430,10 +463,10 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
       };
       await NoteCacheService.instance.savePdfRecordLocally(pdfRecord);
 
-      if (widget.incident?.id != null) {
+      if (widget.incident != null) {
         try {
           await CaseFolderService.instance.addDocument(
-            incidentId: widget.incident!.id!,
+            incidentId: widget.incident!.id ?? widget.incident!.localId,
             documentType: documentType,
             title: _subjectController.text.trim().isEmpty
                 ? documentType
@@ -442,7 +475,7 @@ class _InformationNoteScreenState extends State<InformationNoteScreen> {
             filePath: file.path,
           );
           await CaseFolderService.instance.addActivity(
-            incidentId: widget.incident!.id!,
+            incidentId: widget.incident!.id ?? widget.incident!.localId,
             action: 'Evrak Eklendi',
             description: fileName,
           );

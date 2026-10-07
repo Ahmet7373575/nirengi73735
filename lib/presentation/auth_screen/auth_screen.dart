@@ -536,6 +536,18 @@ class _AuthScreenState extends State<AuthScreen>
 
                   SizedBox(height: 2.h),
 
+                  OutlinedButton.icon(
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            await AuthService.instance.enableOfflineMode();
+                            if (mounted) context.go(AppRoutes.homeScreen);
+                          },
+                    icon: const Icon(Icons.cloud_off_outlined),
+                    label: const Text('Cihazda çevrimdışı devam et'),
+                  ),
+                  SizedBox(height: 1.h),
+
                   // ── Toggle login/signup ────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

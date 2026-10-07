@@ -67,12 +67,12 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
   }
 
   Future<void> _addPerson() async {
-    if (incident.id == null) return _message('Önce dosyayı sunucuya kaydedin.');
     final data = await _personDialog();
     if (data == null) return;
+    final incidentId = incident.id ?? incident.localId;
     try {
-      await _service.addPerson(incidentId: incident.id!, role: data['role']!, fullName: data['full_name']!, nationalId: data['national_id'], phone: data['phone'], address: data['address'], notes: data['notes']);
-      await _service.addActivity(incidentId: incident.id!, action: 'Şahıs Eklendi', description: data['full_name']!);
+      await _service.addPerson(incidentId: incidentId, role: data['role']!, fullName: data['full_name']!, nationalId: data['national_id'], phone: data['phone'], address: data['address'], notes: data['notes']);
+      await _service.addActivity(incidentId: incidentId, action: 'Şahıs Eklendi', description: data['full_name']!);
       await _loadRelated();
     } catch (error) {
       _message('Şahıs kaydedilemedi: $error');
@@ -80,12 +80,12 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
   }
 
   Future<void> _addVehicle() async {
-    if (incident.id == null) return _message('Önce dosyayı sunucuya kaydedin.');
     final data = await _vehicleDialog();
     if (data == null) return;
+    final incidentId = incident.id ?? incident.localId;
     try {
-      await _service.addVehicle(incidentId: incident.id!, plate: data['plate'], makeModel: data['make_model'], color: data['color'], ownerName: data['owner_name'], notes: data['notes']);
-      await _service.addActivity(incidentId: incident.id!, action: 'Araç Eklendi', description: data['plate'] ?? 'Araç');
+      await _service.addVehicle(incidentId: incidentId, plate: data['plate'], makeModel: data['make_model'], color: data['color'], ownerName: data['owner_name'], notes: data['notes']);
+      await _service.addActivity(incidentId: incidentId, action: 'Araç Eklendi', description: data['plate'] ?? 'Araç');
       await _loadRelated();
     } catch (error) {
       _message('Araç kaydedilemedi: $error');
@@ -93,7 +93,6 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
   }
 
   Future<void> _addMedia() async {
-    if (incident.id == null) return _message('Önce dosyayı sunucuya kaydedin.');
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (context) => SafeArea(child: Wrap(children: [
@@ -104,6 +103,7 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
     if (source == null) return;
     final file = await ImagePicker().pickImage(source: source, imageQuality: 82, maxWidth: 2200);
     if (file == null) return;
+    final incidentId = incident.id ?? incident.localId;
     try {
       Position? position;
       var permission = await Geolocator.checkPermission();
@@ -111,8 +111,8 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
       if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
         position = await Geolocator.getCurrentPosition();
       }
-      await _service.addMedia(incidentId: incident.id!, fileName: file.name, bytes: await file.readAsBytes(), latitude: position?.latitude, longitude: position?.longitude);
-      await _service.addActivity(incidentId: incident.id!, action: 'Medya Eklendi', description: file.name);
+      await _service.addMedia(incidentId: incidentId, fileName: file.name, bytes: await file.readAsBytes(), sourcePath: file.path, latitude: position?.latitude, longitude: position?.longitude);
+      await _service.addActivity(incidentId: incidentId, action: 'Medya Eklendi', description: file.name);
       await _loadRelated();
       _message('Fotoğraf dosyaya eklendi.');
     } catch (error) {
