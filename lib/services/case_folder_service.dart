@@ -118,6 +118,16 @@ class CaseFolderService {
     String? phone,
     String? address,
     String? notes,
+    String? gender,
+    String? fatherName,
+    String? motherName,
+    String? birthPlace,
+    String? birthDate,
+    String? registeredDistrict,
+    String? registeredProvince,
+    String? occupation,
+    String? education,
+    String? maritalStatus,
   }) async {
     await LocalCaseStorage.add(incidentId, 'persons', {
       'role': role,
@@ -126,6 +136,16 @@ class CaseFolderService {
       'phone': phone,
       'address': address,
       'notes': notes,
+      'gender': gender,
+      'father_name': fatherName,
+      'mother_name': motherName,
+      'birth_place': birthPlace,
+      'birth_date': birthDate,
+      'registered_district': registeredDistrict,
+      'registered_province': registeredProvince,
+      'occupation': occupation,
+      'education': education,
+      'marital_status': maritalStatus,
     });
     if (!_cloudReady) return;
     try {
@@ -137,6 +157,16 @@ class CaseFolderService {
         'phone': phone,
         'address': address,
         'notes': notes,
+        'gender': gender,
+        'father_name': fatherName,
+        'mother_name': motherName,
+        'birth_place': birthPlace,
+        'birth_date': birthDate,
+        'registered_district': registeredDistrict,
+        'registered_province': registeredProvince,
+        'occupation': occupation,
+        'education': education,
+        'marital_status': maritalStatus,
         'user_id': _userId,
       });
     } catch (_) {
@@ -150,6 +180,8 @@ class CaseFolderService {
     String? makeModel,
     String? color,
     String? ownerName,
+    String? role,
+    String? chassisEngine,
     String? notes,
   }) async {
     await LocalCaseStorage.add(incidentId, 'vehicles', {
@@ -157,6 +189,8 @@ class CaseFolderService {
       'make_model': makeModel,
       'color': color,
       'owner_name': ownerName,
+      'role': role,
+      'chassis_engine': chassisEngine,
       'notes': notes,
     });
     if (!_cloudReady) return;
@@ -167,6 +201,8 @@ class CaseFolderService {
         'make_model': makeModel,
         'color': color,
         'owner_name': ownerName,
+        'role': role,
+        'chassis_engine': chassisEngine,
         'notes': notes,
         'user_id': _userId,
       });

@@ -71,7 +71,7 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
     if (data == null) return;
     final incidentId = incident.id ?? incident.localId;
     try {
-      await _service.addPerson(incidentId: incidentId, role: data['role']!, fullName: data['full_name']!, nationalId: data['national_id'], phone: data['phone'], address: data['address'], notes: data['notes']);
+      await _service.addPerson(incidentId: incidentId, role: data['role']!, fullName: data['full_name']!, nationalId: data['national_id'], phone: data['phone'], address: data['address'], notes: data['notes'], gender: data['gender'], fatherName: data['father_name'], motherName: data['mother_name'], birthPlace: data['birth_place'], birthDate: data['birth_date'], registeredDistrict: data['registered_district'], registeredProvince: data['registered_province'], occupation: data['occupation'], education: data['education'], maritalStatus: data['marital_status']);
       await _service.addActivity(incidentId: incidentId, action: 'Şahıs Eklendi', description: data['full_name']!);
       await _loadRelated();
     } catch (error) {
@@ -84,7 +84,7 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
     if (data == null) return;
     final incidentId = incident.id ?? incident.localId;
     try {
-      await _service.addVehicle(incidentId: incidentId, plate: data['plate'], makeModel: data['make_model'], color: data['color'], ownerName: data['owner_name'], notes: data['notes']);
+      await _service.addVehicle(incidentId: incidentId, plate: data['plate'], makeModel: data['make_model'], color: data['color'], ownerName: data['owner_name'], role: data['role'], chassisEngine: data['chassis_engine'], notes: data['notes']);
       await _service.addActivity(incidentId: incidentId, action: 'Araç Eklendi', description: data['plate'] ?? 'Araç');
       await _loadRelated();
     } catch (error) {
@@ -121,6 +121,22 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
   }
 
   Future<void> _exportZip() async {
+    final includeSensitive = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Olay paketi oluştur'),
+        content: const Text(
+          'T.C. kimlik, telefon, adres, anne/baba adı ve şasi/motor bilgileri pakete dahil edilsin mi?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Maskele')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Dahil et')),
+        ],
+      ),
+    );
+    if (includeSensitive == null) return;
+    String sensitive(dynamic value) =>
+        includeSensitive ? _text(value) : (value?.toString().trim().isNotEmpty == true ? '•••' : 'Belirtilmedi');
     final archive = Archive();
     void addText(String name, String value) {
       final bytes = utf8.encode(value);
@@ -128,8 +144,8 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
     }
     addText('00_Paket_Bilgisi.txt', 'BEKÇİ BİLGİ NOTU\nOlay Dosyası: ${incident.title}\nOluşturma: ${DateTime.now().toIso8601String()}');
     addText('01_Olay_Bilgileri.txt', 'Başlık: ${incident.title}\nDurum: ${incident.incidentStatus}\nÖncelik: ${incident.priority}\nKonum: ${_text(incident.location)}\n\n${incident.description}');
-    addText('02_Sahislar.txt', _persons.asMap().entries.map((e) => '${e.key + 1}. ${_text(e.value['full_name'])} • ${_text(e.value['role'])}\nT.C.: ${_text(e.value['national_id'])}\nTelefon: ${_text(e.value['phone'])}\nAdres: ${_text(e.value['address'])}').join('\n\n'));
-    addText('03_Araclar.txt', _vehicles.asMap().entries.map((e) => '${e.key + 1}. ${_text(e.value['plate'])} • ${_text(e.value['make_model'])} • ${_text(e.value['color'])}').join('\n'));
+    addText('02_Sahislar.txt', _persons.asMap().entries.map((e) => '${e.key + 1}. ${_text(e.value['full_name'])} • ${_text(e.value['role'])}\nT.C.: ${sensitive(e.value['national_id'])}\nTelefon: ${sensitive(e.value['phone'])}\nBaba adı: ${sensitive(e.value['father_name'])}\nAnne adı: ${sensitive(e.value['mother_name'])}\nAdres: ${sensitive(e.value['address'])}').join('\n\n'));
+    addText('03_Araclar.txt', _vehicles.asMap().entries.map((e) => '${e.key + 1}. ${_text(e.value['plate'])} • ${_text(e.value['make_model'])} • ${_text(e.value['color'])}\nOlaydaki rolü: ${_text(e.value['role'])}\nRuhsat sahibi: ${sensitive(e.value['owner_name'])}\nŞasi / motor: ${sensitive(e.value['chassis_engine'])}').join('\n'));
     addText('04_Evraklar.txt', _documents.asMap().entries.map((e) => '${e.key + 1}. ${_text(e.value['title'])} • ${_text(e.value['document_type'])}').join('\n'));
     addText('05_Zaman_Cizelgesi.txt', _history.map((e) => '${_text(e['created_at'])} • ${_text(e['action'])}: ${_text(e['description'])}').join('\n'));
     addText('06_Medya.txt', _media.map((e) => '${_text(e['file_name'])}: ${_text(e['file_path'])}').join('\n'));
@@ -149,22 +165,42 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
     final phone = TextEditingController();
     final address = TextEditingController();
     final notes = TextEditingController();
+    final gender = TextEditingController();
+    final father = TextEditingController();
+    final mother = TextEditingController();
+    final birthPlace = TextEditingController();
+    final birthDate = TextEditingController();
+    final registeredDistrict = TextEditingController();
+    final registeredProvince = TextEditingController();
+    final occupation = TextEditingController();
+    final education = TextEditingController();
+    final maritalStatus = TextEditingController();
     final result = await showDialog<Map<String, String>>(context: context, builder: (context) => AlertDialog(
       title: const Text('Şahıs ekle'),
       content: SingleChildScrollView(child: Column(children: [
         TextField(controller: role, decoration: const InputDecoration(labelText: 'Sıfat (müşteki/şüpheli/bilgi sahibi)')),
         TextField(controller: name, decoration: const InputDecoration(labelText: 'Ad soyad')),
         TextField(controller: id, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'T.C. kimlik no')),
+        TextField(controller: gender, decoration: const InputDecoration(labelText: 'Cinsiyet')),
+        TextField(controller: father, decoration: const InputDecoration(labelText: 'Baba adı')),
+        TextField(controller: mother, decoration: const InputDecoration(labelText: 'Anne adı')),
+        TextField(controller: birthPlace, decoration: const InputDecoration(labelText: 'Doğum yeri')),
+        TextField(controller: birthDate, decoration: const InputDecoration(labelText: 'Doğum tarihi')),
+        TextField(controller: registeredProvince, decoration: const InputDecoration(labelText: 'Nüfusa kayıtlı il')),
+        TextField(controller: registeredDistrict, decoration: const InputDecoration(labelText: 'Nüfusa kayıtlı ilçe')),
+        TextField(controller: occupation, decoration: const InputDecoration(labelText: 'Meslek')),
+        TextField(controller: education, decoration: const InputDecoration(labelText: 'Eğitim durumu')),
+        TextField(controller: maritalStatus, decoration: const InputDecoration(labelText: 'Medeni hâl')),
         TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Telefon')),
         TextField(controller: address, decoration: const InputDecoration(labelText: 'İkamet adresi')),
         TextField(controller: notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Not')),
       ])),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
-        FilledButton(onPressed: () { if (name.text.trim().isNotEmpty) Navigator.pop(context, {'role': role.text.trim(), 'full_name': name.text.trim(), 'national_id': id.text.trim(), 'phone': phone.text.trim(), 'address': address.text.trim(), 'notes': notes.text.trim()}); }, child: const Text('Kaydet')),
+        FilledButton(onPressed: () { if (name.text.trim().isNotEmpty) Navigator.pop(context, {'role': role.text.trim(), 'full_name': name.text.trim(), 'national_id': id.text.trim(), 'gender': gender.text.trim(), 'father_name': father.text.trim(), 'mother_name': mother.text.trim(), 'birth_place': birthPlace.text.trim(), 'birth_date': birthDate.text.trim(), 'registered_province': registeredProvince.text.trim(), 'registered_district': registeredDistrict.text.trim(), 'occupation': occupation.text.trim(), 'education': education.text.trim(), 'marital_status': maritalStatus.text.trim(), 'phone': phone.text.trim(), 'address': address.text.trim(), 'notes': notes.text.trim()}); }, child: const Text('Kaydet')),
       ],
     ));
-    for (final controller in [role, name, id, phone, address, notes]) { controller.dispose(); }
+    for (final controller in [role, name, id, gender, father, mother, birthPlace, birthDate, registeredProvince, registeredDistrict, occupation, education, maritalStatus, phone, address, notes]) { controller.dispose(); }
     return result;
   }
 
@@ -173,6 +209,8 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
     final model = TextEditingController();
     final color = TextEditingController();
     final owner = TextEditingController();
+    final role = TextEditingController(text: 'Olaya Karışan');
+    final chassis = TextEditingController();
     final notes = TextEditingController();
     final result = await showDialog<Map<String, String>>(context: context, builder: (context) => AlertDialog(
       title: const Text('Araç ekle'),
@@ -180,15 +218,17 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
         TextField(controller: plate, textCapitalization: TextCapitalization.characters, decoration: const InputDecoration(labelText: 'Plaka')),
         TextField(controller: model, decoration: const InputDecoration(labelText: 'Marka / model')),
         TextField(controller: color, decoration: const InputDecoration(labelText: 'Renk')),
+        TextField(controller: role, decoration: const InputDecoration(labelText: 'Olaydaki rolü')),
         TextField(controller: owner, decoration: const InputDecoration(labelText: 'Sahibi')),
+        TextField(controller: chassis, decoration: const InputDecoration(labelText: 'Şasi / motor no')),
         TextField(controller: notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Not')),
       ])),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
-        FilledButton(onPressed: () { if (plate.text.trim().isNotEmpty) Navigator.pop(context, {'plate': plate.text.trim().toUpperCase(), 'make_model': model.text.trim(), 'color': color.text.trim(), 'owner_name': owner.text.trim(), 'notes': notes.text.trim()}); }, child: const Text('Kaydet')),
+        FilledButton(onPressed: () { if (plate.text.trim().isNotEmpty) Navigator.pop(context, {'plate': plate.text.trim().toUpperCase(), 'make_model': model.text.trim(), 'color': color.text.trim(), 'role': role.text.trim(), 'owner_name': owner.text.trim(), 'chassis_engine': chassis.text.trim(), 'notes': notes.text.trim()}); }, child: const Text('Kaydet')),
       ],
     ));
-    for (final controller in [plate, model, color, owner, notes]) { controller.dispose(); }
+    for (final controller in [plate, model, color, role, owner, chassis, notes]) { controller.dispose(); }
     return result;
   }
 
